@@ -1,0 +1,45 @@
+name: タスク
+description: 機能開発やバグ修正などのタスク用テンプレート
+title: "[タスク] <簡単なタイトル>"
+labels: ["task"]
+body:
+  - type: input
+    id: background
+    attributes:
+      label: 背景・目的
+      description: なぜこのタスクが必要か、目的や背景を簡単に書いてください。
+      placeholder: 例）業務の効率化のために帳票出力機能が必要
+    validations:
+      required: true
+
+  - type: textarea
+    id: spec
+    attributes:
+      label: 実装概要（設計）
+      description: どんな機能か、どう実装するかの簡単な設計・概要を書いてください。
+      placeholder: |
+        - 画面：◯◯画面にボタン追加
+        - 処理：API経由でCSV出力
+        - ライブラリ：◯◯を使用予定
+    validations:
+      required: true
+
+  - type: textarea
+    id: todo
+    attributes:
+      label: ToDo（作業内容）
+      description: このタスクで必要な作業をリストアップしてください。
+      value: |
+        - [ ] UI作成
+        - [ ] バックエンド処理実装
+        - [ ] 動作確認
+    validations:
+      required: true
+
+  - type: input
+    id: est
+    attributes:
+      label: 想定作業時間（任意）
+      placeholder: 例）3時間
+    validations:
+      required: false
