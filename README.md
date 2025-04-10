@@ -1,1 +1,1 @@
-# asera-reports
+# アセラ日報自動化
