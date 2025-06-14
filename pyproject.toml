@@ -6,3 +6,4 @@ profile = 'black'
 
 [tool.mypy]
 warn_unused_configs = true
+explicit_package_bases = true
