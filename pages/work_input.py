@@ -10,31 +10,36 @@ st.markdown("""
 <style>
 
 [data-testid="stAppViewContainer"] {
-    background-color: #f0f2f6;
-    background-image: linear-gradient(to right bottom, #c3d4e3, #dbe4ee, #f3f5f9, #ffffff, #ffffff);
+   background-color: #f0faf7;
 }
-[data-testid="stBlockContainer"] {
-    background: transparent;
-}
+
+[data-testid="stBlockContainer"],
 [data-testid="stHorizontalBlock"] {
     background: transparent;
 }
-[data-testid="stDateInput"] input {
-    background: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 10px;
-    color: #333;
-    padding-right: 35px !important;
+
+[data-testid="stForm"] input,
+[data-testid="stForm"] textarea,
+[data-testid="stForm"] [data-baseweb="select"] > div {
+    background-color: #FFFFFF !important;
+    color: #333 !important; 
 }
+
+
+[data-testid="stDateInput"] input {
+    background-color: #FFFFFF !important;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
 [data-testid="stForm"] {
     background-color: #E0F2F1;
     border-radius: 10px;
     padding: 25px;
     border: 1px solid #B2DFDB;
 }
+
+/* Calendar icon styling (no change) */
 [data-testid="stDateInput"] {
     position: relative;
 }
@@ -52,17 +57,19 @@ st.markdown("""
     background-repeat: no-repeat;
     background-position: center;
 }
+
 [data-testid="stFormSubmitButton"] {
     display: flex;
     justify-content: center;
 }
 [data-testid="stFormSubmitButton"] button {
-    width: 60%;
+    width: 50%;
+    margin-top: 10px;
     color: white;
     font-weight: bold;
     border: none;
     padding: 10px 0px;
-    border-radius: 5px;
+    border-radius: 8px;
     background-image: linear-gradient(to right, #00897B, #00695C);
     transition: all 0.3s ease-in-out;
 }
@@ -72,14 +79,15 @@ st.markdown("""
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     cursor: pointer;
 }
+
 .time-separator {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 5px;
-    padding-top: 28px;
+    height: 38px; 
+    padding-top: 8px;
     font-weight: bold;
-    font-size: 100px;
+    font-size: 40px; 
 }
 </style> 
 """, unsafe_allow_html=True)
@@ -87,7 +95,7 @@ st.markdown("""
 
 col1, col2 = st.columns([3, 1])
 with col1:
-    work_date = st.date_input("<UNK>",datetime.date.today(), label_visibility="collapsed")
+    work_date = st.date_input("Date", datetime.date.today(), label_visibility="collapsed")
 
 st.markdown("<h3>作業実績入力</h3>", unsafe_allow_html=True)
 
@@ -100,10 +108,10 @@ with st.form(key="work_form"):
     with t_col3:
         end_time = st.time_input( "終了時間", label_visibility="collapsed")
     work_category = st.selectbox(
-        "**作業カテゴリー**", options=["開発", "ミーティング", "資料作成", "その他"],
+        "**作業カテゴリー**", options=[],
     )
     work_client = st.selectbox(
-        "**請求先**", options=["A社", "B社", "自社"],
+        "**請求先**", options=[],
     )
     work_content = st.text_area("**作業内容**")
     st.write("**納品物**")
