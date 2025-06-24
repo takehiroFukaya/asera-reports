@@ -25,13 +25,6 @@ st.markdown("""
     color: #333 !important; 
 }
 
-
-[data-testid="stDateInput"] input {
-    background-color: #FFFFFF !important;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-}
-
 [data-testid="stForm"] {
     background-color: #E0F2F1;
     border-radius: 10px;
@@ -39,10 +32,17 @@ st.markdown("""
     border: 1px solid #B2DFDB;
 }
 
-/* Calendar icon styling (no change) */
+[data-testid="stDateInput"] input {
+    background-color: #FFFFFF !important;
+    border: 1px solid #ccc; 
+    border-radius: 10px;
+}
+
 [data-testid="stDateInput"] {
+    background: none !important;
     position: relative;
 }
+
 [data-testid="stDateInput"]::after {
     content: ' ';
     display: block;
@@ -78,6 +78,7 @@ st.markdown("""
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     cursor: pointer;
+    color: white;
 }
 
 .time-separator {
@@ -124,6 +125,11 @@ with st.form(key="work_form"):
     submit_button = st.form_submit_button(label="登録")
 
 if submit_button:
+    # バリデーション: リマークス以外は空欄禁止
+    if not all([work_date, start_time, end_time, work_category, work_client, deliverable_item]):
+        st.error("日付、時間、カテゴリー、請求先、納品物名をすべて入力してください。")
+    elif start_time >= end_time:
+        st.error("終了時間は開始時間より遅い時間を選択してください。")
     st.success("作業記録を登録しました！")
     st.write("---")
     st.write("### 登録内容")
