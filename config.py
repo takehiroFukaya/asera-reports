@@ -12,4 +12,5 @@ class Config:
         'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/drive'
     ]
+    share_email = ['aseratkyn@gmail.com']
 
