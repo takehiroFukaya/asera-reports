@@ -57,7 +57,10 @@ st.markdown(
     @import url(
         'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap'
     );
-
+    [data-testid="stMainBlockContainer"] {
+        display: flex;
+        justify-content: center:
+    }
     div.stHeading > div > div > h1 {
         display: flex;
         justify-content: center;
@@ -71,7 +74,10 @@ st.markdown(
            -moz-background-clip: text;
                 background-clip: text;
     }
-
+    [data-testid="stColumn"] {
+        display: flex;
+        justify-content: center:
+    }
     div.stButton > button {
         display: flex;
         justify-content: center;
@@ -106,8 +112,8 @@ col1, col2, col3 = st.columns([1, 1, 1])
 with col2:
     st.title("課内日報")
     if st.button("作業登録"):
-        st.switch_page("pages/workReport.py")
+        st.switch_page("pages/work_input.py")
     if st.button("勤怠登録"):
-        st.switch_page("pages/dayReport.py")
+        st.switch_page("pages/shift_input.py")
     if st.button("出勤簿作成"):
         st.switch_page("pages/workRecord.py")
