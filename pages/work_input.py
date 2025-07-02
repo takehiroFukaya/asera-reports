@@ -70,7 +70,7 @@ st.markdown("""
     border: none;
     padding: 10px 0px;
     border-radius: 8px;
-    background-image: linear-gradient(to right, #00897B, #00695C);
+    background-color: #26A69A; 
     transition: all 0.3s ease-in-out;
 }
 [data-testid="stFormSubmitButton"] button:hover {
@@ -125,7 +125,6 @@ with st.form(key="work_form"):
     submit_button = st.form_submit_button(label="登録")
 
 if submit_button:
-    # バリデーション: リマークス以外は空欄禁止
     if not all([work_date, start_time, end_time, work_category, work_client, deliverable_item]):
         st.error("日付、時間、カテゴリー、請求先、納品物名をすべて入力してください。")
     elif start_time >= end_time:
