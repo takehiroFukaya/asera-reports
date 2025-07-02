@@ -70,7 +70,7 @@ st.markdown("""
     border: none;
     padding: 10px 0px;
     border-radius: 8px;
-    background-image: linear-gradient(to right, #00897B, #00695C);
+    background-color: #26A69A; 
     transition: all 0.3s ease-in-out;
 }
 [data-testid="stFormSubmitButton"] button:hover {
