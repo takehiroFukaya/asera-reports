@@ -1,11 +1,10 @@
 import streamlit as st
-import pandas as pd
-import io
+from utils.functions import *
 
 st.set_page_config(
     page_title="Work Log",
     page_icon="📋",
-    layout="centered"
+    layout="wide"
 )
 
 
@@ -14,9 +13,31 @@ def load_css():
     <style>
         .stApp {
             background-color: #f0faf7;
-            display: flex;
-            flex-direction: column;
             min-height: 100vh;
+            display: flex;
+            flex-direction: row;
+        }
+        .back-button-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 42px;
+            width: 42px; 
+            border-radius: 12px;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+        .back-button-link:hover {
+            background: rgba(255, 255, 255, 0.8); /* Slightly more opaque on hover */
+        }
+        .back-button-link svg {
+            stroke: #263238; /* Icon color */
+            stroke-width: 2.5;
         }
 
         [data-testid="stSelectbox"] {
@@ -31,6 +52,11 @@ def load_css():
             background-color: transparent;
             border: none;
         }
+        [data-testid="column"] {
+    width: calc(33.3333% - 1rem) !important;
+    flex: 1 1 calc(33.3333% - 1rem) !important;
+    min-width: calc(33% - 1rem) !important;
+}
 
         [data-testid="stDataFrame"] {
             background-color: transparent; 
@@ -89,9 +115,9 @@ def load_css():
             transition: all 0.3s ease-in-out;
             text-decoration: none;
             text-align: center;
-            display: flex;
+            display: flex;  
             color: white !important;
-            background-image: linear-gradient(to right, #00897B, #00695C) !important;
+            background-color: #26A69A; 
         }
 
         [data-testid="stDownloadButton"] > button:hover {
@@ -102,61 +128,57 @@ def load_css():
             color: white !important;
             background-image: linear-gradient(to right, #009688, #00897B) !important;
         }
+
+        @media (max-width: 680px) {
+        
+        [data-testid="column"] {
+
+        }
+        
+        [data-testid="stSelectbox"]  {
+           max-width: 350px;
+        }
+           
+        }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 
-import datetime
-
-
-def generate_month_options():
-    options = []
-    today = datetime.date.today()
-    current_year = today.year
-    current_month = today.month
-
-    for year in range(current_year, current_year - 6, -1):
-        start_month = current_month if year == current_year else 12
-
-        for month in range(start_month, 0, -1):
-            month_str = f"{year}年{month}月"
-            options.append(month_str)
-
-    default_value = f"{current_year}年{current_month}月"
-    default_index = options.index(default_value)
-
-    return (options, default_index)
-
-def to_excel(df):
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='WorkLog')
-    processed_data = output.getvalue()
-    return processed_data
-
 load_css()
 
 data = {
-    "日付":      ["2025-06-01", "2025-06-04", "2025-06-06", ],
-    "勤務時間":  ["9:00~18:00", "9:00~12:00", "9:00~12:00"],
-    "業務内容":  ["コード修正",     "コード修正",     "コード修正"],
-    "請求先":    ["株式会社A",     "株式会社B",     "株式会社A"],
-    "納品物":    ["仕様書",         "テスト結果",     "仕様書"],
-    "金額":      [50000,           20000,           20000],
+    "日付": ["2025-06-01", "2025-06-04", "2025-06-06", ],
+    "勤務時間": ["9:00~18:00", "9:00~12:00", "9:00~12:00"],
+    "業務内容": ["コード修正", "コード修正", "コード修正"],
+    "請求先": ["株式会社A", "株式会社B", "株式会社A"],
+    "納品物": ["仕様書", "テスト結果", "仕様書"],
+    "金額": [50000, 20000, 20000],
 }
 df = pd.DataFrame(data)
 total_hours = 12
 total_amount = df["金額"].sum()
 
 month_options, default_month_index = generate_month_options()
+col1, col2 = st.columns([0.4, 0.6])
 
-selected_month = st.selectbox(
-    label="Select Month",
-    options=month_options,
-    index=default_month_index,
-    label_visibility="collapsed"
-)
+# with col1:
+#     st.markdown("""
+#         <a href="/" target="_self" class="back-button-link">
+#             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+#                 <polyline points="15 18 9 12 15 6"></polyline>
+#             </svg>
+#         </a>
+#     """, unsafe_allow_html=True)
+
+with col2:
+    selected_month = st.selectbox(
+        label="Select Month",
+        options=month_options,
+        index=default_month_index,
+        label_visibility="collapsed"
+    )
+
 st.write("")  # Spacer
 
 st.dataframe(df, use_container_width=True, hide_index=True)
