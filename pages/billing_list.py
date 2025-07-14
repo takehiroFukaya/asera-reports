@@ -162,14 +162,14 @@ total_amount = df["金額"].sum()
 month_options, default_month_index = generate_month_options()
 col1, col2 = st.columns([0.4, 0.6])
 
-# with col1:
-#     st.markdown("""
-#         <a href="/" target="_self" class="back-button-link">
-#             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-#                 <polyline points="15 18 9 12 15 6"></polyline>
-#             </svg>
-#         </a>
-#     """, unsafe_allow_html=True)
+with col1:
+    st.markdown("""
+        <a href="/" target="_self" class="back-button-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </a>
+    """, unsafe_allow_html=True)
 
 with col2:
     selected_month = st.selectbox(
