@@ -3,7 +3,7 @@ import logging
 import time
 
 import gspread
-from google.oauth2.service_account import Credentials
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
@@ -15,12 +15,11 @@ logger = logging.getLogger(__name__)
 
 class Connection:
     def __init__(self):
-        self.credentials = Credentials.from_service_account_file(
-            Config.service_account_file,scopes=Config.scopes
-        )
+        self.credentials = Credentials.from_authorized_user_file(Config.account_file,Config.scopes)
         self.folder_id = Config.folder_id
         self.gc = gspread.authorize(self.credentials)
         self.service = build("drive", "v3", credentials=self.credentials)
+
 
 
     def find_monthly_folder(self,now_month):
@@ -38,6 +37,19 @@ class Connection:
             logger.error(f"今月のフォルダの検索に失敗しました: {error}")
             return None
 
+    def find_spreadsheet(self, folder_id: str, name: str) -> str | None:
+        """名前からその月のフォルダ内のスプレッドシートを取得"""
+        try:
+            query =  f"name contains '{name}' and '{folder_id}' in parents and mimeType='application/vnd.google-apps.spreadsheet'"
+            result = self.service.files().list(q=query).execute()
+            file = result.get("files",[])
+            if file:
+                return file[0]['id']
+            return None
+        except HttpError as error:
+            logger.error(f"スプレッドシートが検索できません:{error}")
+            return None
+
     def create_folder(self,now_month:str):
         """月のフォルダを作成、作成が成功したら作成したフォルダのidを返す"""
         try:
@@ -46,7 +58,7 @@ class Connection:
                 'mimeType': 'application/vnd.google-apps.folder',
                 'parents': [self.folder_id]
             }
-            create_folder = self.service.files().create(body=folder_metadata).execute()
+            create_folder = self.service.files().create(body=folder_metadata,supportsAllDrives=True).execute()
             month_folder_id = create_folder['id']
             self.set_permission(month_folder_id,"月のフォルダ")
 
@@ -55,9 +67,6 @@ class Connection:
         except HttpError as error:
             logger.error(f"フォルダ作成エラー: {error}")
             return None
-
-    def update_file(self, file_id: str):
-        return file_id
 
 
     def set_permission(self, file_id: str, file_type: str):
@@ -72,7 +81,7 @@ class Connection:
                 fileId=file_id,
                 body=permission,
                 sendNotificationEmail=False,
-                supportsAllDrives=True
+                supportsAllDrives=True,
             ).execute()
             print(f"{file_type}のパーミッション設定が完了しました。")
             return True

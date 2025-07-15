@@ -7,9 +7,8 @@ load_dotenv()
 
 class Config:
     folder_id = os.environ.get('DEFALUT_FOLDER_ID')
-    service_account_file = '../asera-dayreport-15c05cf58a1f.json'
+    account_file = '../aouth2_client.json'
     scopes = [
-        'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/drive'
     ]
     share_email = ['aseratkyn@gmail.com']

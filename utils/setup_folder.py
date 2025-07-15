@@ -19,10 +19,10 @@ class SetupFolder:
         """指定された月のセットアップを行う,成功したらtrueを返す"""
         current_month = str(datetime.datetime.now().month)
         try:
+            print("中間地点1")
             folder_id = self.connection.find_monthly_folder(current_month)
             if not folder_id:
                 folder_id = self.connection.create_folder(current_month)
-                # 少し待機（API制限対策）
                 time.sleep(2)
                 print(f"フォルダ{current_month}を作成しました")
 
@@ -61,8 +61,7 @@ class SetupFolder:
                 else:
                     print(f"{name}スプレッドシートの作成に失敗しました")
 
-                # API制限対策で少し待機
-                time.sleep(1)
+                time.sleep(2)
 
             except Exception as error:
                 logger.error(f"{name}スプレッドシート作成中にエラー: {error}")

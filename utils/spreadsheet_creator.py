@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from googleapiclient.errors import HttpError
 
@@ -53,7 +52,7 @@ class SpreadsheetCreator:
             sheet_type="日報ファイル"
         )
 
-    def create_workrecord_spreadsheet(self, folder_id: str, month_name: str) -> Optional[str]:
+    def create_workrecord_spreadsheet(self, folder_id: str, month_name: str) -> str | None:
         """出勤簿用スプレッドシートを作成する"""
         headers = [
             "出勤日時",
@@ -85,17 +84,17 @@ class SpreadsheetCreator:
 
         return self.create_spreadsheet(
             folder_id=folder_id,
-            name=f'TTTTT_{month_name}月_日報',
+            name=f'TTTTT_{month_name}月_納品物',
             description=f'{month_name}月の日報用スプレッドシート',
             headers=headers,
-            sheet_type="日報ファイル"
+            sheet_type="納品物ファイル"
         )
 
     def create_spreadsheet(self, folder_id: str, name: str, description: str,
-                            headers: list[str], sheet_type: str) -> Optional[str]:
+                            headers: list[str], sheet_type: str) -> str | None:
         """スプレッドシートを作成する関数"""
         try:
-            # スプレッドシートのメタデータ
+            """スプレッドシートのメタデータ"""
             spreadsheet_metadata = {
                 'name': name,
                 'parents': [folder_id],
@@ -103,14 +102,14 @@ class SpreadsheetCreator:
                 'description': description
             }
 
-            # スプレッドシートを作成
+            """スプレッドシートを作成"""
             spreadsheet = self.service.files().create(body=spreadsheet_metadata).execute()
             spreadsheet_id = spreadsheet['id']
 
-            # 権限設定
+            """権限設定"""
             self.connection.set_permission(spreadsheet_id, sheet_type)
 
-            # ヘッダーを設定
+            """ヘッダーを設定"""
             self.setup_headers(spreadsheet_id, headers)
 
             print(f"スプレッドシート '{name}' が作成されました。ID: {spreadsheet_id}")
@@ -129,11 +128,11 @@ class SpreadsheetCreator:
             sheet = self.gc.open_by_key(spreadsheet_id)
             worksheet = sheet.sheet1
 
-            # ヘッダー行を設定
+            """ヘッダーの行を設定"""
             header_range = f'A1:{chr(ord("A") + len(headers) - 1)}1'
             worksheet.update(values=[headers], range_name=header_range)
 
-            # ヘッダー行のフォーマット設定
+            """ヘッダーのフォーマットを設定"""
             worksheet.format(header_range, {
                 "backgroundColor": {
                     "red": 0.8,
