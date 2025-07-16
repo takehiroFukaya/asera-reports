@@ -59,7 +59,7 @@ st.markdown(
     );
     [data-testid="stMainBlockContainer"] {
         display: flex;
-        justify-content: center:
+        justify-content: center;
     }
     div.stHeading > div > div > h1 {
         display: flex;
@@ -76,7 +76,7 @@ st.markdown(
     }
     [data-testid="stColumn"] {
         display: flex;
-        justify-content: center:
+        justify-content: center;
     }
     div.stButton > button {
         display: flex;
@@ -86,6 +86,15 @@ st.markdown(
         color: #349AA6;
         border-radius: 20px;
         box-shadow: 0px 4px 4px rgba(0,0,0,0.25);
+    }
+    div.stButton > button:hover {
+        border-color: #349AA6;
+        color: #349AA6;
+    }
+    div.stButton > button:active {
+        border-color: #1a4d53;
+        color: #1a4d53;
+        background-color: #1a4d53;
     }
     div.stButton > button > div > p{
         font-size: 32px;
@@ -116,4 +125,4 @@ with col2:
     if st.button("勤怠登録"):
         st.switch_page("pages/shift_input.py")
     if st.button("出勤簿作成"):
-        st.switch_page("pages/workRecord.py")
+        st.switch_page("pages/shift_record.py")
