@@ -107,7 +107,7 @@ class SpreadsheetCreator:
             spreadsheet_id = spreadsheet['id']
 
             """権限設定"""
-            self.connection.set_permission(spreadsheet_id, sheet_type)
+            # self.connection.set_permission(spreadsheet_id, sheet_type)
 
             """ヘッダーを設定"""
             self.setup_headers(spreadsheet_id, headers)

@@ -7,9 +7,10 @@ load_dotenv()
 
 class Config:
     folder_id = os.environ.get('DEFALUT_FOLDER_ID')
-    account_file = '../aouth2_client.json'
+    account_file = '../desktop.json'
     scopes = [
-        'https://www.googleapis.com/auth/drive'
+        "https://www.googleapis.com/auth/drive",
+        "https://www.googleapis.com/auth/userinfo.profile"
     ]
     share_email = ['aseratkyn@gmail.com']
 
