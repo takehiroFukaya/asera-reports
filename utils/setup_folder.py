@@ -28,7 +28,7 @@ class SetupFolder:
 
             folder_id = self.connection.find_folder_by_name(current_month,parent_folder)
             if not folder_id:
-                folder_id = self.connection.create_folder(current_month)
+                folder_id = self.connection.create_folder(current_month,parent_folder)
                 time.sleep(2)
                 print(f"フォルダ{current_month}を作成しました")
 

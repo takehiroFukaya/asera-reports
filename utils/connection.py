@@ -18,7 +18,7 @@ class Connection:
     def __init__(self):
         self.credentials = Credentials.from_authorized_user_file("token.json", Config.scopes)
         # self.credentials = service_account.Credentials.from_service_account_file("../asera-dayreport-15c05cf58a1f.json", scopes=Config.scopes)
-        self.folder_id = Config.folder_id
+        # self.folder_id = Config.folder_id
         self.gc = gspread.authorize(self.credentials)
         self.service = build("drive", "v3", credentials=self.credentials)
         try:
@@ -39,8 +39,10 @@ class Connection:
             print(result.get('files', []))
             files = result.get('files', [])
             if files:
+                print(f"ファイル{name}を発見しました")
                 return files[0]['id']
             else:
+                print(f"ファイル{name}を発見できませんでした")
                 return None
 
         except HttpError as error:
@@ -60,20 +62,26 @@ class Connection:
             logger.error(f"スプレッドシートが検索できません:{error}")
             return None
 
-    def create_folder(self,now_month:str):
+    def create_folder(self,name:str,parent_folder = None):
         """月のフォルダを作成、作成が成功したら作成したフォルダのidを返す"""
         try:
-            folder_metadata = {
-                'name': now_month,
-                'mimeType': 'application/vnd.google-apps.folder',
-                'parents': [self.folder_id]
-            }
+            if not parent_folder:
+                folder_metadata = {
+                    'name': name,
+                    'mimeType': 'application/vnd.google-apps.folder',
+                }
+            else:
+                folder_metadata = {
+                    'name': name,
+                    'mimeType': 'application/vnd.google-apps.folder',
+                    'parents': [parent_folder]
+                }
             create_folder = self.service.files().create(body=folder_metadata,supportsAllDrives=True).execute()
-            month_folder_id = create_folder['id']
+            created_folder_id = create_folder['id']
             # self.set_permission(month_folder_id,"月のフォルダ")
 
-            print(f"フォルダ'{now_month}'が作成されました")
-            return month_folder_id
+            print(f"フォルダ'{name}'が作成されました")
+            return created_folder_id
         except HttpError as error:
             logger.error(f"フォルダ作成エラー: {error}")
             return None
