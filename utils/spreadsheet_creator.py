@@ -26,7 +26,7 @@ class SpreadsheetCreator:
 
         return self.create_spreadsheet(
             folder_id=folder_id,
-            name=f'TTTTT_{month_name}月_作業内容',
+            name=f'{self.connection.user}_{month_name}月_作業内容',
             description=f'{month_name}月の作業内容用スプレッドシート',
             headers=headers,
             sheet_type="作業内容ファイル"
@@ -46,7 +46,7 @@ class SpreadsheetCreator:
 
         return self.create_spreadsheet(
             folder_id=folder_id,
-            name=f'TTTTT_{month_name}月_日報',
+            name=f'{self.connection.user}_{month_name}月_日報',
             description=f'{month_name}月の日報用スプレッドシート',
             headers=headers,
             sheet_type="日報ファイル"
@@ -66,7 +66,7 @@ class SpreadsheetCreator:
 
         return self.create_spreadsheet(
             folder_id=folder_id,
-            name=f'TTTTT_{month_name}月_出勤簿',
+            name=f'{self.connection.user}_{month_name}月_出勤簿',
             description=f'{month_name}月の出勤簿用スプレッドシート',
             headers=headers,
             sheet_type="出勤簿ファイル"
@@ -84,7 +84,7 @@ class SpreadsheetCreator:
 
         return self.create_spreadsheet(
             folder_id=folder_id,
-            name=f'TTTTT_{month_name}月_納品物',
+            name=f'{self.connection.user}_{month_name}月_納品物',
             description=f'{month_name}月の日報用スプレッドシート',
             headers=headers,
             sheet_type="納品物ファイル"
