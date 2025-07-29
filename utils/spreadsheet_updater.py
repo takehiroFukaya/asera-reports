@@ -1,7 +1,7 @@
 import datetime
 import logging
 
-from connection import Connection
+from .connection import Connection
 
 logger = logging.getLogger(__name__)
 
@@ -14,9 +14,21 @@ class SpreadsheetUpdater:
         if not self.parent_folder:
             logger.error(f"日報_{self.connection.user}のファイルが見つかりません")
 
-    def add_work_report(self):
-        """作業内容のレコードを追加する。引数に受け取るデータを追加して受け取れるようにする。"""
-        return self.add_record(str(datetime.datetime.now().month),"作業内容",[str(datetime.datetime.now()),str(datetime.datetime.now()),"UBIC","なにか","PCセットアップ","2:00","東進会社","深谷"])
+    def add_work_report(self, start_datetime: datetime.datetime, end_datetime: datetime.datetime, work_category: str, work_content: str, work_client: str, deliverable_item: str, deliverable_quantity: int, amount: int) -> bool:
+
+        month = str(start_datetime.month)
+        sheet_name = "作業内容"
+        data = [
+            str(start_datetime),
+            str(end_datetime),
+            work_category,
+            work_content,
+            work_client,
+            deliverable_item,
+            str(deliverable_quantity),
+            str(amount)
+        ]
+        return self.add_record(month, sheet_name, data)
 
 
     def add_record(self, month: str, sheet_name: str, data: list ):
