@@ -1,5 +1,6 @@
 import streamlit as st
 from utils.functions import *
+from utils.spreadsheet_updater import SpreadsheetUpdater
 
 st.set_page_config(
     page_title="Work Log",
@@ -146,18 +147,20 @@ def load_css():
 
 
 load_css()
+# #
+# # data = {
+# #     "日付": ["2025-06-01", "2025-06-04", "2025-06-06", ],
+# #     "勤務時間": ["9:00~18:00", "9:00~12:00", "9:00~12:00"],
+# #     "業務内容": ["コード修正", "コード修正", "コード修正"],
+# #     "請求先": ["株式会社A", "株式会社B", "株式会社A"],
+# #     "納品物": ["仕様書", "テスト結果", "仕様書"],
+# #     "金額": [50000, 20000, 20000],
+# # }
+# # df = pd.DataFrame(data)
+# # total_hours = 12
+# total_amount = df["金額"].sum()
 
-data = {
-    "日付": ["2025-06-01", "2025-06-04", "2025-06-06", ],
-    "勤務時間": ["9:00~18:00", "9:00~12:00", "9:00~12:00"],
-    "業務内容": ["コード修正", "コード修正", "コード修正"],
-    "請求先": ["株式会社A", "株式会社B", "株式会社A"],
-    "納品物": ["仕様書", "テスト結果", "仕様書"],
-    "金額": [50000, 20000, 20000],
-}
-df = pd.DataFrame(data)
-total_hours = 12
-total_amount = df["金額"].sum()
+
 
 month_options, default_month_index = generate_month_options()
 col1, col2 = st.columns([0.4, 0.6])
@@ -180,8 +183,14 @@ with col2:
     )
 
 st.write("")  # Spacer
+updater = SpreadsheetUpdater()
+month = selected_month.replace("月", "")
+df = updater.get_work_logs(month)
+total_hours = len(df) * 3
+total_amount = df["金額"].sum()
 
 st.dataframe(df, use_container_width=True, hide_index=True)
+
 
 st.markdown(f"""
 <div class="total-card">
