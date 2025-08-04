@@ -2,8 +2,8 @@ import datetime
 import logging
 import time
 
-from connection import Connection
-from spreadsheet_creator import SpreadsheetCreator
+from .connection import Connection
+from .spreadsheet_creator import SpreadsheetCreator
 from streamlit import connection
 
 logger = logging.getLogger(__name__)
@@ -14,32 +14,29 @@ class SetupFolder:
         self.connection = Connection()
         self.spread = SpreadsheetCreator(self.connection)
 
-
     def setup(self):
-        """指定された月のセットアップを行う,成功したらtrueを返す"""
-        current_month = str(datetime.datetime.now().month)
+        """指定された月のセットアップを行う ― 成功したら True を返す"""
+        today = datetime.datetime.now()
+        current_month = f"{today.year}年{today.month}"
+
         user_name = self.connection.user
         try:
             print("中間地点1")
             parent_folder = self.connection.find_folder_by_name(f"日報_{user_name}")
             if not parent_folder:
-                parent_folder =  self.connection.create_folder(f"日報_{user_name}")
+                parent_folder = self.connection.create_folder(f"日報_{user_name}")
 
-
-            folder_id = self.connection.find_folder_by_name(current_month,parent_folder)
+            folder_id = self.connection.find_folder_by_name(current_month, parent_folder)
             if not folder_id:
-                folder_id = self.connection.create_folder(current_month,parent_folder)
+                folder_id = self.connection.create_folder(current_month, parent_folder)
                 time.sleep(2)
                 print(f"フォルダ{current_month}を作成しました")
 
-                # スプレッドシートを作成
                 success = self.create_all_spreadsheets(folder_id, current_month)
-
                 return success
             else:
                 print(f"すでにフォルダ{current_month}は存在します")
                 return True
-
         except Exception as error:
             logger.error(f"セットアップ中にエラーが発生しました: {error}")
             return False

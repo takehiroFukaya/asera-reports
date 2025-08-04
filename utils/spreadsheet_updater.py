@@ -2,8 +2,7 @@ import datetime
 import logging
 import pandas as pd
 
-from .connection import Connection
-
+from .connection import  Connection
 logger = logging.getLogger(__name__)
 
 class SpreadsheetUpdater:
@@ -17,7 +16,7 @@ class SpreadsheetUpdater:
 
     def add_work_report(self, start_datetime: datetime.datetime, end_datetime: datetime.datetime, work_category: str, work_content: str, work_client: str, deliverable_item: str, deliverable_quantity: int, amount: int) -> bool:
 
-        month = str(start_datetime.month)
+        month = f"{start_datetime.year}年{start_datetime.month}"
         sheet_name = "作業内容"
         data = [
             str(start_datetime),

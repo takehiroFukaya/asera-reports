@@ -141,7 +141,7 @@ if submit_button:
     minutes = (total_seconds % 3600) // 60
     time_spent_display = f"{hours:02d}:{minutes:02d}"
 
-    if not all([work_date, start_time, end_time, work_category, work_client, work_content, deliverable_item]):
+    if not all([work_date, start_time, end_time, work_content, deliverable_item]):
         st.error("全ての必須項目（日付、時間、カテゴリー、請求先、作業内容、納品物名）を入力してください。")
     elif start_time >= end_time:
         st.error("終了時間は開始時間より遅い時間を選択してください。")
