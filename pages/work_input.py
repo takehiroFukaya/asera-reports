@@ -1,6 +1,8 @@
 import streamlit as st
 import datetime
 
+from utils.spreadsheet_updater import SpreadsheetUpdater
+
 st.set_page_config(
     page_title="作業登録",
     layout="centered",
@@ -100,6 +102,11 @@ with col1:
 
 st.markdown("<h3>作業実績入力</h3>", unsafe_allow_html=True)
 
+if 'updater' not in st.session_state:
+    st.session_state['updater'] = SpreadsheetUpdater()
+
+updater = st.session_state['updater']
+
 with st.form(key="work_form"):
     t_col1, t_col2, t_col3 = st.columns([2, 0.5, 2])
     with t_col1:
@@ -125,18 +132,42 @@ with st.form(key="work_form"):
     submit_button = st.form_submit_button(label="登録")
 
 if submit_button:
-    if not all([work_date, start_time, end_time, work_category, work_client, deliverable_item]):
-        st.error("日付、時間、カテゴリー、請求先、納品物名をすべて入力してください。")
+    start_datetime = datetime.datetime.combine(work_date, start_time)
+    end_datetime = datetime.datetime.combine(work_date, end_time)
+
+    duration = end_datetime - start_datetime
+    total_seconds = int(duration.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    time_spent_display = f"{hours:02d}:{minutes:02d}"
+
+    if not all([work_date, start_time, end_time, work_category, work_client, work_content, deliverable_item]):
+        st.error("全ての必須項目（日付、時間、カテゴリー、請求先、作業内容、納品物名）を入力してください。")
     elif start_time >= end_time:
         st.error("終了時間は開始時間より遅い時間を選択してください。")
-    st.success("作業記録を登録しました！")
-    st.write("---")
-    st.write("### 登録内容")
-    st.write(f"**日付:** {work_date}")
-    st.write(f"**作業時間:** {start_time} ~ {end_time}")
-    st.write(f"**カテゴリー:** {work_category}")
-    st.write(f"**請求先:** {work_client}")
-    st.write(f"**作業内容:**")
-    st.info(work_content)
-    st.write(f"**納品物:** {deliverable_item} (数量: {deliverable_quantity})")
-    st.write(f"**金額:** ¥{amount:,}")
+    else:
+        success = updater.add_work_report(
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            work_category=work_category,
+            work_content=work_content,
+            work_client=work_client,
+            deliverable_item=deliverable_item,
+            deliverable_quantity=deliverable_quantity,
+            amount=amount
+        )
+
+        if success:
+            st.success("✅ 作業記録を正常に登録しました！")
+            st.write("---")
+            st.write("### 登録内容")
+            st.write(f"**日付:** {work_date}")
+            st.write(f"**作業時間:** {start_time.strftime('%H:%M')} ~ {end_time.strftime('%H:%M')} (合計: {time_spent_display})")
+            st.write(f"**カテゴリー:** {work_category if work_category else '未選択'}")
+            st.write(f"**請求先:** {work_client if work_client else '未選択'}")
+            st.write(f"**作業内容:**")
+            st.info(work_content)
+            st.write(f"**納品物:** {deliverable_item} (数量: {deliverable_quantity})")
+            st.write(f"**金額:** ¥{amount:,}")
+        else:
+            st.error("❌ 作業記録の登録に失敗しました。詳細はアプリケーションのログを確認してください。")
