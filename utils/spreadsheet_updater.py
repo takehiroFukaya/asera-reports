@@ -1,7 +1,9 @@
 import datetime
 import logging
 
-from connection import Connection
+import pandas as pd
+
+from .connection import Connection
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +58,7 @@ class SpreadsheetUpdater:
             logger.error(f"{sheet_name}でのデータの追加に失敗しました:{error}")
             return False
 
-    def get_shift_record(self, month: str):
+    def get_shift_record(self, month: str) -> pd.DataFrame:
         try:
             folder_id = self.connection.find_folder_by_name(month, self.parent_folder)
             if not folder_id:
@@ -72,8 +74,20 @@ class SpreadsheetUpdater:
                 )
                 return False
 
+            sheet = self.gc.open_by_key(spreadsheet_id)
+            worksheet = sheet.sheet1
+            all_values = worksheet.get_all_values()
+
+            headers = all_values[0]
+            data = all_values[1:]
+
+            df = pd.DataFrame(data, columns=headers)
+            print(df)
+            print(headers)
+            return df
+
         except Exception as error:
             logger.error(
-                f"{self.connection.user}_{month}月_出勤簿でのデータの追加に失敗しました:{error}"
+                f"{self.connection.user}_{month}月_出勤簿でのデータの取得に失敗しました:{error}"
             )
             return False

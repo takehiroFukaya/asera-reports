@@ -1,6 +1,8 @@
+import pandas as pd
 import streamlit as st
-from utils.functions import generate_month_options
 
+from utils.functions import generate_month_options, time_to_hours
+from utils.spreadsheet_updater import SpreadsheetUpdater
 
 st.set_page_config(layout="centered")
 
@@ -145,14 +147,17 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
 # --- App Layout ---
+
+updater = SpreadsheetUpdater()
 
 # Row 1: Controls
 col1, col2 = st.columns([1.5, 1])
 month_options, default_index = generate_month_options()
 
 with col1:
-    st.selectbox(
+    selected_month = st.selectbox(
         "Month",
         options=month_options,
         index=default_index,
@@ -171,9 +176,17 @@ with col2:
         unsafe_allow_html=True,
     )
 
+year, month = selected_month.replace("月", "").split("年")
+st.info(month)
+df = updater.get_shift_record(month)
+
+if df.empty:
+    st.info("出勤簿の内容はなにもありません")
+
+# total_time = df[["勤務時間", "所定外1", "所定外2", "所定外3"]].sum().sum()
 # Row 2: Summary Statistics Box
 st.markdown(
-    """
+    f"""
     <div class="summary-box">
         <div class="summary-item">
             <span>合計就労日</span>
@@ -182,7 +195,7 @@ st.markdown(
         <div class="summary-divider"></div>
         <div class="summary-item">
             <span>合計時間</span>
-            <span class="value">36 h</span>
+            <span class="value">{total_time} h</span>
         </div>
     </div>
 """,
@@ -190,18 +203,22 @@ st.markdown(
 )
 
 # List of Work Day Entries
-work_days = [
-    {"date": "5月1日 (水)", "time": "9:00~18:00"},
-    {"date": "5月4日 (水)", "time": "9:00~18:00"},
-    {"date": "5月6日 (水)", "time": "9:00~18:00"},
-]
+# work_days = [
+#     {"date": "5月1日 (水)", "time": "9:00~18:00"},
+#     {"date": "5月4日 (水)", "time": "9:00~18:00"},
+#     {"date": "5月6日 (水)", "time": "9:00~18:00"},
+# ]
+
+work_days = df.loc[:, ["出勤日時", "退勤日時"]].to_dict(orient="records")
 
 for day in work_days:
+    start_date, start_time = day["出勤日時"].split(" ")
+    end_date, end_time = day["退勤日時"].split(" ")
     st.markdown(
         f"""
         <div class="date-card">
-            <div class="date">{day['date']}</div>
-            <div class="time">{day['time']}</div>
+            <div class="date">{start_date}</div>
+            <div class="time">{start_time}~{end_time}</div>
         </div>
     """,
         unsafe_allow_html=True,

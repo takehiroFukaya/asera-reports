@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class Connection:
     def __init__(self):
         self.credentials = Credentials.from_authorized_user_file(
-            "token.json", Config.scopes
+            "utils/token.json", Config.scopes
         )
         # self.credentials = service_account.Credentials.from_service_account_file("../asera-dayreport-15c05cf58a1f.json", scopes=Config.scopes)
         # self.folder_id = Config.folder_id
