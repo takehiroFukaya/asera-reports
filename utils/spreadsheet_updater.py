@@ -13,7 +13,7 @@ class SpreadsheetUpdater:
         self.parent_folder = self.connection.find_folder_by_name(f"日報_{self.connection.user}")
         if not self.parent_folder:
             logger.error(f"日報_{self.connection.user}のファイルが見つかりません")
-
+    # issue 18
     def add_work_report(self, start_datetime: datetime.datetime, end_datetime: datetime.datetime, work_category: str, work_content: str, work_client: str, deliverable_item: str, deliverable_quantity: int, amount: int) -> bool:
 
         month = str(start_datetime.month)
