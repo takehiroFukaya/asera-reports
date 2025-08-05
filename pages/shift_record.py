@@ -4,7 +4,8 @@ from utils.functions import generate_month_options
 
 st.set_page_config(layout="centered")
 
-st.markdown("""
+st.markdown(
+    """
 <style>
     .stApp {
         background-color: #f0faf7;
@@ -140,7 +141,9 @@ st.markdown("""
         border: none;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # --- App Layout ---
 
@@ -153,20 +156,24 @@ with col1:
         "Month",
         options=month_options,
         index=default_index,
-        label_visibility="collapsed"
+        label_visibility="collapsed",
     )
 
 with col2:
-    st.markdown("""
+    st.markdown(
+        """
         <div class="hour-box">
             <span>所定外時間</span>
             <span class="divider"></span>
             <span>12 h</span>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 # Row 2: Summary Statistics Box
-st.markdown("""
+st.markdown(
+    """
     <div class="summary-box">
         <div class="summary-item">
             <span>合計就労日</span>
@@ -178,7 +185,9 @@ st.markdown("""
             <span class="value">36 h</span>
         </div>
     </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # List of Work Day Entries
 work_days = [
@@ -188,12 +197,15 @@ work_days = [
 ]
 
 for day in work_days:
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div class="date-card">
             <div class="date">{day['date']}</div>
             <div class="time">{day['time']}</div>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 if st.button("出力"):
     st.switch_page("pages/billing_list.py")

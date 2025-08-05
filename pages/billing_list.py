@@ -1,11 +1,7 @@
 import streamlit as st
 from utils.functions import *
 
-st.set_page_config(
-    page_title="Work Log",
-    page_icon="📋",
-    layout="wide"
-)
+st.set_page_config(page_title="Work Log", page_icon="📋", layout="wide")
 
 
 def load_css():
@@ -148,7 +144,11 @@ def load_css():
 load_css()
 
 data = {
-    "日付": ["2025-06-01", "2025-06-04", "2025-06-06", ],
+    "日付": [
+        "2025-06-01",
+        "2025-06-04",
+        "2025-06-06",
+    ],
     "勤務時間": ["9:00~18:00", "9:00~12:00", "9:00~12:00"],
     "業務内容": ["コード修正", "コード修正", "コード修正"],
     "請求先": ["株式会社A", "株式会社B", "株式会社A"],
@@ -163,32 +163,38 @@ month_options, default_month_index = generate_month_options()
 col1, col2 = st.columns([0.4, 0.6])
 
 with col1:
-    st.markdown("""
+    st.markdown(
+        """
         <a href="/" target="_self" class="back-button-link">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
         </a>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
 with col2:
     selected_month = st.selectbox(
         label="Select Month",
         options=month_options,
         index=default_month_index,
-        label_visibility="collapsed"
+        label_visibility="collapsed",
     )
 
 st.write("")  # Spacer
 
 st.dataframe(df, use_container_width=True, hide_index=True)
 
-st.markdown(f"""
+st.markdown(
+    f"""
 <div class="total-card">
     <span>合計</span>
     <span>{total_hours} 時間</span>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 excel_data = to_excel(df)
 

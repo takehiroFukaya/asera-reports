@@ -6,7 +6,8 @@ st.set_page_config(
     layout="centered",
 )
 
-st.markdown("""
+st.markdown(
+    """
 <style>
 
 [data-testid="stAppViewContainer"] {
@@ -88,32 +89,44 @@ st.markdown("""
     font-size: 40px;
 }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 col1, _ = st.columns([3, 1])
 with col1:
-    work_date = st.date_input("Date", datetime.date.today(), label_visibility="collapsed")
+    work_date = st.date_input(
+        "Date", datetime.date.today(), label_visibility="collapsed"
+    )
 
 with st.form(key="shift_form"):
     # 出勤時間
     st.markdown("**出勤時間**")
     t_col1, t_col2, t_col3 = st.columns([2, 0.5, 2])
     with t_col1:
-        start_time = st.time_input("開始時間", datetime.time(9, 0), label_visibility="collapsed")
+        start_time = st.time_input(
+            "開始時間", datetime.time(9, 0), label_visibility="collapsed"
+        )
     with t_col2:
         st.markdown("<p class='time-separator'>~</p>", unsafe_allow_html=True)
     with t_col3:
-        end_time = st.time_input("終了時間", datetime.time(18, 0), label_visibility="collapsed")
+        end_time = st.time_input(
+            "終了時間", datetime.time(18, 0), label_visibility="collapsed"
+        )
 
     # 休憩時間
     st.markdown("**休憩時間**")
     b_col1, b_col2, b_col3 = st.columns([2, 0.5, 2])
     with b_col1:
-        break_start = st.time_input("開始時間", datetime.time(12, 0), label_visibility="collapsed")
+        break_start = st.time_input(
+            "開始時間", datetime.time(12, 0), label_visibility="collapsed"
+        )
     with b_col2:
         st.markdown("<p class='time-separator'>~</p>", unsafe_allow_html=True)
     with b_col3:
-        break_end = st.time_input("終了時間", datetime.time(13, 0), label_visibility="collapsed")
+        break_end = st.time_input(
+            "終了時間", datetime.time(13, 0), label_visibility="collapsed"
+        )
 
     # 備考欄
     st.markdown("**備考欄**")

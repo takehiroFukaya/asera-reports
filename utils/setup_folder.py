@@ -14,7 +14,6 @@ class SetupFolder:
         self.connection = Connection()
         self.spread = SpreadsheetCreator(self.connection)
 
-
     def setup(self):
         """指定された月のセットアップを行う,成功したらtrueを返す"""
         current_month = str(datetime.datetime.now().month)
@@ -23,12 +22,13 @@ class SetupFolder:
             print("中間地点1")
             parent_folder = self.connection.find_folder_by_name(f"日報_{user_name}")
             if not parent_folder:
-                parent_folder =  self.connection.create_folder(f"日報_{user_name}")
+                parent_folder = self.connection.create_folder(f"日報_{user_name}")
 
-
-            folder_id = self.connection.find_folder_by_name(current_month,parent_folder)
+            folder_id = self.connection.find_folder_by_name(
+                current_month, parent_folder
+            )
             if not folder_id:
-                folder_id = self.connection.create_folder(current_month,parent_folder)
+                folder_id = self.connection.create_folder(current_month, parent_folder)
                 time.sleep(2)
                 print(f"フォルダ{current_month}を作成しました")
 
@@ -73,4 +73,3 @@ class SetupFolder:
                 logger.error(f"{name}スプレッドシート作成中にエラー: {error}")
 
         return success_count == total_count
-

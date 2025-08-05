@@ -13,34 +13,49 @@ from config import Config
 logger = logging.getLogger(__name__)
 
 
-
 class Connection:
     def __init__(self):
-        self.credentials = Credentials.from_authorized_user_file("token.json", Config.scopes)
+        self.credentials = Credentials.from_authorized_user_file(
+            "token.json", Config.scopes
+        )
         # self.credentials = service_account.Credentials.from_service_account_file("../asera-dayreport-15c05cf58a1f.json", scopes=Config.scopes)
         # self.folder_id = Config.folder_id
         self.gc = gspread.authorize(self.credentials)
         self.service = build("drive", "v3", credentials=self.credentials)
         try:
-            self.user = self.service.about().get(fields="user").execute()["user"]["displayName"]
+            self.user = (
+                self.service.about().get(fields="user").execute()["user"]["displayName"]
+            )
         except Exception as e:
             print(f"ユーザ名の取得に失敗しました{e}")
             self.user = "unknown"
 
-
-
-    def find_folder_by_name(self,name,folder_id = None):
+    def find_folder_by_name(self, name, folder_id=None):
         """現在の月のフォルダを探し存在した場合そのフォルダのidを返す"""
         try:
             if folder_id:
-                result = self.service.files().list(q=f"name='{name}' and '{folder_id}' in parents and mimeType='application/vnd.google-apps.folder'",fields="files(id,name)").execute()
+                result = (
+                    self.service.files()
+                    .list(
+                        q=f"name='{name}' and '{folder_id}' in parents and mimeType='application/vnd.google-apps.folder'",
+                        fields="files(id,name)",
+                    )
+                    .execute()
+                )
             else:
-                result = self.service.files().list(q=f"name='{name}' and mimeType='application/vnd.google-apps.folder'",fields="files(id,name)").execute()
-            print(result.get('files', []))
-            files = result.get('files', [])
+                result = (
+                    self.service.files()
+                    .list(
+                        q=f"name='{name}' and mimeType='application/vnd.google-apps.folder'",
+                        fields="files(id,name)",
+                    )
+                    .execute()
+                )
+            print(result.get("files", []))
+            files = result.get("files", [])
             if files:
                 print(f"ファイル{name}を発見しました")
-                return files[0]['id']
+                return files[0]["id"]
             else:
                 print(f"ファイル{name}を発見できませんでした")
                 return None
@@ -52,32 +67,36 @@ class Connection:
     def find_spreadsheet(self, folder_id: str, name: str) -> str | None:
         """名前からその月のフォルダ内のスプレッドシートを取得"""
         try:
-            query =  f"name contains '{name}' and '{folder_id}' in parents and mimeType='application/vnd.google-apps.spreadsheet'"
+            query = f"name contains '{name}' and '{folder_id}' in parents and mimeType='application/vnd.google-apps.spreadsheet'"
             result = self.service.files().list(q=query).execute()
-            file = result.get("files",[])
+            file = result.get("files", [])
             if file:
-                return file[0]['id']
+                return file[0]["id"]
             return None
         except HttpError as error:
             logger.error(f"スプレッドシートが検索できません:{error}")
             return None
 
-    def create_folder(self,name:str,parent_folder = None):
+    def create_folder(self, name: str, parent_folder=None):
         """月のフォルダを作成、作成が成功したら作成したフォルダのidを返す"""
         try:
             if not parent_folder:
                 folder_metadata = {
-                    'name': name,
-                    'mimeType': 'application/vnd.google-apps.folder',
+                    "name": name,
+                    "mimeType": "application/vnd.google-apps.folder",
                 }
             else:
                 folder_metadata = {
-                    'name': name,
-                    'mimeType': 'application/vnd.google-apps.folder',
-                    'parents': [parent_folder]
+                    "name": name,
+                    "mimeType": "application/vnd.google-apps.folder",
+                    "parents": [parent_folder],
                 }
-            create_folder = self.service.files().create(body=folder_metadata,supportsAllDrives=True).execute()
-            created_folder_id = create_folder['id']
+            create_folder = (
+                self.service.files()
+                .create(body=folder_metadata, supportsAllDrives=True)
+                .execute()
+            )
+            created_folder_id = create_folder["id"]
             # self.set_permission(month_folder_id,"月のフォルダ")
 
             print(f"フォルダ'{name}'が作成されました")
@@ -107,6 +126,3 @@ class Connection:
     #     except HttpError as error:
     #         logger.error(f"権限設定エラー: {error}")
     #         return False
-
-
-

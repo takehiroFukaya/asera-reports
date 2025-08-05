@@ -21,9 +21,10 @@ def generate_month_options():
 
     return (options, default_index)
 
+
 def to_excel(df):
     output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='WorkLog')
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="WorkLog")
     processed_data = output.getvalue()
     return processed_data

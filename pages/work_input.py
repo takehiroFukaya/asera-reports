@@ -6,7 +6,8 @@ st.set_page_config(
     layout="centered",
 )
 
-st.markdown("""
+st.markdown(
+    """
 <style>
 
 [data-testid="stAppViewContainer"] {
@@ -91,12 +92,16 @@ st.markdown("""
     font-size: 40px; 
 }
 </style> 
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 col1, col2 = st.columns([3, 1])
 with col1:
-    work_date = st.date_input("Date", datetime.date.today(), label_visibility="collapsed")
+    work_date = st.date_input(
+        "Date", datetime.date.today(), label_visibility="collapsed"
+    )
 
 st.markdown("<h3>作業実績入力</h3>", unsafe_allow_html=True)
 
@@ -107,12 +112,14 @@ with st.form(key="work_form"):
     with t_col2:
         st.markdown("<p class='time-separator'>~</p>", unsafe_allow_html=True)
     with t_col3:
-        end_time = st.time_input( "終了時間", label_visibility="collapsed")
+        end_time = st.time_input("終了時間", label_visibility="collapsed")
     work_category = st.selectbox(
-        "**作業カテゴリー**", options=[],
+        "**作業カテゴリー**",
+        options=[],
     )
     work_client = st.selectbox(
-        "**請求先**", options=[],
+        "**請求先**",
+        options=[],
     )
     work_content = st.text_area("**作業内容**")
     st.write("**納品物**")
@@ -120,12 +127,16 @@ with st.form(key="work_form"):
     with d_col1:
         deliverable_item = st.text_input("納品物名", label_visibility="collapsed")
     with d_col2:
-        deliverable_quantity = st.number_input("数量", value=1, min_value=1, step=1, label_visibility="collapsed")
+        deliverable_quantity = st.number_input(
+            "数量", value=1, min_value=1, step=1, label_visibility="collapsed"
+        )
     amount = st.number_input("**金額**", min_value=0, step=1000)
     submit_button = st.form_submit_button(label="登録")
 
 if submit_button:
-    if not all([work_date, start_time, end_time, work_category, work_client, deliverable_item]):
+    if not all(
+        [work_date, start_time, end_time, work_category, work_client, deliverable_item]
+    ):
         st.error("日付、時間、カテゴリー、請求先、納品物名をすべて入力してください。")
     elif start_time >= end_time:
         st.error("終了時間は開始時間より遅い時間を選択してください。")
