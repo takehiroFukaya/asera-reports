@@ -63,7 +63,7 @@ class SpreadsheetUpdater:
             folder_id = self.connection.find_folder_by_name(month, self.parent_folder)
             if not folder_id:
                 logger.error(f"{month}月のフォルダが見つかりません")
-                return False
+                return pd.DataFrame()  # <-- change
 
             spreadsheet_id = self.connection.find_spreadsheet(
                 folder_id, f"{self.connection.user}_{month}月_出勤簿"
@@ -72,22 +72,20 @@ class SpreadsheetUpdater:
                 logger.error(
                     f"{self.connection.user}_{month}月_出勤簿のファイルが見つかりません"
                 )
-                return False
+                return pd.DataFrame()  # <-- change
 
             sheet = self.gc.open_by_key(spreadsheet_id)
             worksheet = sheet.sheet1
             all_values = worksheet.get_all_values()
 
-            headers = all_values[0]
-            data = all_values[1:]
+            if not all_values or len(all_values) < 2:
+                return pd.DataFrame()  # <-- empty sheet guard
 
-            df = pd.DataFrame(data, columns=headers)
-            print(df)
-            print(headers)
-            return df
+            headers, data = all_values[0], all_values[1:]
+            return pd.DataFrame(data, columns=headers)
 
-        except Exception as error:
+        except Exception as e:
             logger.error(
-                f"{self.connection.user}_{month}月_出勤簿でのデータの取得に失敗しました:{error}"
+                f"{self.connection.user}_{month}月_出勤簿でのデータ取得に失敗しました: {e}"
             )
-            return False
+            return pd.DataFrame() # <-- change

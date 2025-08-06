@@ -177,52 +177,52 @@ with col2:
     )
 
 year, month = selected_month.replace("月", "").split("年")
-st.info(month)
 df = updater.get_shift_record(month)
 
 if df.empty:
     st.info("出勤簿の内容はなにもありません")
 
-# total_time = df[["勤務時間", "所定外1", "所定外2", "所定外3"]].sum().sum()
-# Row 2: Summary Statistics Box
-st.markdown(
-    f"""
-    <div class="summary-box">
-        <div class="summary-item">
-            <span>合計就労日</span>
-            <span class="value">12日</span>
-        </div>
-        <div class="summary-divider"></div>
-        <div class="summary-item">
-            <span>合計時間</span>
-            <span class="value">{total_time} h</span>
-        </div>
-    </div>
-""",
-    unsafe_allow_html=True,
-)
+else:
+    ## change
+    numeric_cols = ["勤務時間"]
 
-# List of Work Day Entries
-# work_days = [
-#     {"date": "5月1日 (水)", "time": "9:00~18:00"},
-#     {"date": "5月4日 (水)", "time": "9:00~18:00"},
-#     {"date": "5月6日 (水)", "time": "9:00~18:00"},
-# ]
+    total_time = (
+        df[numeric_cols]
+          .applymap(time_to_hours)         # '07:30' → 7.5
+          .sum()
+          .sum()
+    )
+    total_days = len(df)
 
-work_days = df.loc[:, ["出勤日時", "退勤日時"]].to_dict(orient="records")
-
-for day in work_days:
-    start_date, start_time = day["出勤日時"].split(" ")
-    end_date, end_time = day["退勤日時"].split(" ")
+    # 2. summary card ------------------------------------------
     st.markdown(
         f"""
-        <div class="date-card">
-            <div class="date">{start_date}</div>
-            <div class="time">{start_time}~{end_time}</div>
+        <div class="summary-box">
+            <div class="summary-item">
+                <span>合計就労日</span>
+                <span class="value">{total_days}日</span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-item">
+                <span>合計時間</span>
+                <span class="value">{total_time:.1f} h</span>
+            </div>
         </div>
-    """,
+        """,
         unsafe_allow_html=True,
     )
-
+    ## change
+    for _, row in df[["出勤日時", "退勤日時"]].iterrows():
+        start_date, start_time = row["出勤日時"].split(" ")
+        _, end_time = row["退勤日時"].split(" ")
+        st.markdown(
+            f"""
+            <div class="date-card">
+                <div class="date">{start_date}</div>
+                <div class="time">{start_time}~{end_time}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 if st.button("出力"):
     st.switch_page("pages/billing_list.py")

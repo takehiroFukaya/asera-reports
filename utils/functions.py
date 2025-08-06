@@ -28,3 +28,13 @@ def to_excel(df):
         df.to_excel(writer, index=False, sheet_name="WorkLog")
     processed_data = output.getvalue()
     return processed_data
+
+def time_to_hours(time_string: str | pd.Timedelta) -> float:
+    if isinstance(time_string, pd.Timedelta):
+        return time_string.total_seconds() / 3600
+
+    try:
+        h, m, *_ = map(int, str(time_string).split(":"))
+        return h + m / 60
+    except ValueError:
+        return 0.0
