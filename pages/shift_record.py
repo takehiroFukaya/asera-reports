@@ -164,20 +164,24 @@ with col1:
         label_visibility="collapsed",
     )
 
+
+year, month = selected_month.replace("月", "").split("年")
+df = updater.get_shift_record(month)
+
+over_cols = ["所定外1", "所定外2", "所定外3"]
+over_time = df[over_cols].applymap(time_to_hours).sum().sum()
 with col2:
     st.markdown(
-        """
+        f"""
         <div class="hour-box">
             <span>所定外時間</span>
             <span class="divider"></span>
-            <span>12 h</span>
+            <span>{over_time} h</span>
         </div>
     """,
         unsafe_allow_html=True,
     )
 
-year, month = selected_month.replace("月", "").split("年")
-df = updater.get_shift_record(month)
 
 if df.empty:
     st.info("出勤簿の内容はなにもありません")

@@ -54,19 +54,61 @@ def hours_to_time(hours: float) -> str:
 
 def calculate_overtime(row) -> Tuple[str, str, str, str]:
     try:
-        work_time_str = row.get("勤務時間", "0:00") or "0:00"
+        overtime_1 = 0.0
+        overtime_2 = 0.0
+        overtime_3 = 0.0
+        work_time_str = row[5] or "0:00"
         work_hours = time_to_hours(work_time_str)
 
         standard_hours = 8.0
 
+        start_time_str = row[0]
+        end_time_str = row[1]
+
+        start_time = datetime.datetime.strptime(start_time_str, "%Y-%m-%d %H:%M:%S")
+        end_time = datetime.datetime.strptime(end_time_str, "%Y-%m-%d %H:%M:%S")
+
+        print(start_time)
+        print(end_time)
+        if start_time.date() == end_time.date():
+
+            if start_time.weekday() == 5 or start_time.weekday() == 6:
+                overtime_2 = work_hours
+                return "", "", hours_to_time(overtime_2), ""
+
+            start_hour = start_time.hour + start_time.minute / 60
+            end_hour = end_time.hour + end_time.minute / 60
+
+            nighttime_hours = 0.0
+
+            # 22:00-24:00の範囲
+            if start_hour < 24 and end_hour > 22:
+                night_start = max(start_hour, 22)
+                night_end = min(end_hour, 24)
+                if night_end > night_start:
+                    nighttime_hours += night_end - night_start
+                    print(f"nighttime_hours:{nighttime_hours}")
+
+            # 0:00-5:00の範囲
+            if start_hour < 5 and end_hour > 0:
+                night_start = max(start_hour, 0)
+                night_end = min(end_hour, 5)
+                if night_end > night_start:
+                    nighttime_hours += night_end - night_start
+                    print(f"nighttime_hours:{nighttime_hours}")
+
+            overtime_3 = nighttime_hours
+
         total_overtime = max(0, work_hours - standard_hours)
-        if total_overtime <= 0:
-            return "", "", "", ""
+        if total_overtime != 0:
+            overtime_1 = total_overtime - overtime_3
 
-        start_time_str = row.get("出勤日時", "")
-        end_time_str = row.get("退勤日時", "")
-
-        return "", "", "", ""
+        return (
+            hours_to_time(work_hours),
+            hours_to_time(overtime_1),
+            hours_to_time(overtime_2),
+            hours_to_time(overtime_3),
+        )
 
     except:
         return "", "", "", ""

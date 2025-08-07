@@ -5,7 +5,6 @@ import pandas as pd
 
 from .connection import Connection
 from .functions import calculate_overtime
-from .connection import Connection
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +19,19 @@ class SpreadsheetUpdater:
         )
         if not self.parent_folder:
             logger.error(f"日報_{self.connection.user}のファイルが見つかりません")
+
     # issue 18
-    def add_work_report(self, start_datetime: datetime.datetime, end_datetime: datetime.datetime, work_category: str, work_content: str, work_client: str, deliverable_item: str, deliverable_quantity: int, amount: int) -> bool:
+    def add_work_report(
+        self,
+        start_datetime: datetime.datetime,
+        end_datetime: datetime.datetime,
+        work_category: str,
+        work_content: str,
+        work_client: str,
+        deliverable_item: str,
+        deliverable_quantity: int,
+        amount: int,
+    ) -> bool:
 
         month = str(start_datetime.month)
         sheet_name = "作業内容"
@@ -33,10 +43,9 @@ class SpreadsheetUpdater:
             work_client,
             deliverable_item,
             str(deliverable_quantity),
-            str(amount)
+            str(amount),
         ]
         return self.add_record(month, sheet_name, data)
-
 
     def add_record(self, month: str, sheet_name: str, data: list):
         try:
@@ -83,25 +92,39 @@ class SpreadsheetUpdater:
             if not all_values or len(all_values) < 2:
                 return pd.DataFrame()  # <-- empty sheet guard
 
-            headers, day_report_data = all_values[0], all_values[1:]
+            day_report_data = all_values[1:]
 
-            for _, row in day_report_data.iterrows():
+            data = []
+            headers = [
+                "出勤日時",
+                "退勤日時",
+                "勤務時間",
+                "休憩時間",
+                "所定外1",
+                "所定外2",
+                "所定外3",
+                "摘要",
+            ]
+            print("動作5")
+
+            for row in day_report_data:
                 work_time, overtime_1, overtime_2, overtime_3 = calculate_overtime(row)
                 shift_recor_row = {
-                    "出勤日時": row.get("出勤日時", ""),
-                    "退勤日時": row.get("退勤日時", ""),
-                    "勤務時間": calculate_overtime(row, 0),
-                    "休憩時間": row.get("休憩時間", ""),
-                    "所定外1": calculate_overtime(row, 1),  # 所定外時間の計算
-                    "所定外2": calculate_overtime(row, 2),
-                    "所定外3": calculate_overtime(row, 3),
-                    "摘要": row.get("備考欄", ""),
+                    "出勤日時": row[0],
+                    "退勤日時": row[1],
+                    "勤務時間": work_time,
+                    "休憩時間": row[4],
+                    "所定外1": overtime_1,  # 所定外時間の計算
+                    "所定外2": overtime_2,
+                    "所定外3": overtime_3,
+                    "摘要": row[6],
                 }
+                data.append(shift_recor_row)
 
             return pd.DataFrame(data, columns=headers)
 
         except Exception as e:
             logger.error(
-                f"{self.connection.user}_{month}月_出勤簿でのデータ取得に失敗しました: {e}"
+                f"{self.connection.user}_{month}月_日報でのデータ取得に失敗しました: {e}"
             )
             return pd.DataFrame()  # <-- change
