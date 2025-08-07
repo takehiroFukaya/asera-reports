@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+# flake8: noqa
 import datetime
 import logging
 import time

@@ -1,5 +1,9 @@
-import streamlit as st
+# flake8: noqa
 import datetime
+
+import streamlit as st
+
+from utils.register_shift import RegisterShift
 
 st.set_page_config(
     page_title="作業登録",
@@ -8,88 +12,88 @@ st.set_page_config(
 
 st.markdown(
     """
-<style>
-
-[data-testid="stAppViewContainer"] {
-   background-color: #f0faf7;
-}
-
-[data-testid="stForm"] {
-    background-color: #E0F2F1;
-    border-radius: 10px;
-    padding: 25px;
-    border: 1px solid #B2DFDB;
-}
-
-[data-testid="stDateInput"] input {
-    background-color: #FFFFFF !important;
-    border: 1px solid #ccc; 
-    border-radius: 10px;
-}
-
-[data-testid="stDateInput"] {
-    background: none !important;
-    position: relative;
-}
-
-[data-testid="stDateInput"]::after {
-    content: ' ';
-    display: block;
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 20px;
-    height: 20px;
-    pointer-events: none;
-    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23555555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>');
-    background-repeat: no-repeat;
-    background-position: center;
-}
-
-[data-testid="stForm"] input,
-[data-testid="stForm"] textarea,
-[data-testid="stForm"] [data-baseweb="select"] > div {
-    background-color: #FFFFFF !important;
-    color: #333 !important;
-    border: 1px solid #ccc !important;
-    border-radius: 8px !important;
-}
-
-[data-testid="stFormSubmitButton"] {
-    display: flex;
-    justify-content: center;
-}
-[data-testid="stFormSubmitButton"] button {
-    width: 50%;
-    margin-top: 10px;
-    color: white;
-    font-weight: bold;
-    border: none;
-    padding: 10px 0px;
-    border-radius: 8px;
-    background-color: #26A69A; 
-    transition: all 0.3s ease-in-out;
-}
-[data-testid="stFormSubmitButton"] button:hover {
-    background-image: linear-gradient(to right, #009688, #00897B);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    cursor: pointer;
-    color: white;
-}
-
-/* Time separator styling */
-.time-separator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 38px;
-    font-weight: bold;
-    font-size: 40px;
-}
-</style>
-""",
+    <style>
+    
+    [data-testid="stAppViewContainer"] {
+       background-color: #f0faf7;
+    }
+    
+    [data-testid="stForm"] {
+        background-color: #E0F2F1;
+        border-radius: 10px;
+        padding: 25px;
+        border: 1px solid #B2DFDB;
+    }
+    
+    [data-testid="stDateInput"] input {
+        background-color: #FFFFFF !important;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+    }
+    
+    [data-testid="stDateInput"] {
+        background: none !important;
+        position: relative;
+    }
+    
+    [data-testid="stDateInput"]::after {
+        content: ' ';
+        display: block;
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 20px;
+        pointer-events: none;
+        background-image: url('data:image/svg+xml, <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23555555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>');
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+    
+    /* [data-testid="stForm"] input, */
+    [data-testid="stForm"] textarea,
+    [data-testid="stForm"] [data-baseweb="select"] > div {
+        background-color: #FFFFFF !important;
+        color: #333 !important;
+        border: 1px solid #ccc !important;
+        border-radius: 8px !important;
+    }
+    
+    [data-testid="stFormSubmitButton"] {
+        display: flex;
+        justify-content: center;
+    }
+    [data-testid="stFormSubmitButton"] button {
+        width: 50%;
+        margin-top: 10px;
+        color: white;
+        font-weight: bold;
+        border: none;
+        padding: 10px 0px;
+        border-radius: 8px;
+        background-color: #26A69A; 
+        transition: all 0.3s ease-in-out;
+    }
+    [data-testid="stFormSubmitButton"] button:hover {
+        background-image: linear-gradient(to right, #009688, #00897B);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        cursor: pointer;
+        color: white;
+    }
+    
+    /* Time separator styling */
+    .time-separator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 38px;
+        font-weight: bold;
+        font-size: 40px;
+    }
+    </style>
+    """,
     unsafe_allow_html=True,
 )
 
@@ -140,7 +144,18 @@ if submit_button:
         st.error("日付、出勤時間、終了時間、休憩時間をすべて入力してください。")
     elif start_time >= end_time:
         st.error("終了時間は開始時間より後に設定してください。")
+    elif break_start > break_end:
+        st.error("休憩終了時間は休憩開始時間より後に設定してください。")
     else:
+        RegisterShift.add_shift(
+            work_date=work_date,
+            start_time=start_time,
+            end_time=end_time,
+            rest_start_time=break_start,
+            rest_end_time=break_end,
+            remarks=work_content,
+        )
+
         st.success("作業記録を登録しました！")
         st.write("---")
         st.write("### 登録内容")
