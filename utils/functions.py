@@ -1,5 +1,7 @@
 import datetime
 import io
+from typing import Tuple
+
 import pandas as pd
 
 
@@ -29,6 +31,7 @@ def to_excel(df):
     processed_data = output.getvalue()
     return processed_data
 
+
 def time_to_hours(time_string: str | pd.Timedelta) -> float:
     if isinstance(time_string, pd.Timedelta):
         return time_string.total_seconds() / 3600
@@ -38,3 +41,32 @@ def time_to_hours(time_string: str | pd.Timedelta) -> float:
         return h + m / 60
     except ValueError:
         return 0.0
+
+
+def hours_to_time(hours: float) -> str:
+    try:
+        h = int(hours)
+        m = int((hours - h) * 60)
+        return f"{h}:{m:02d}"
+    except:
+        return "0:00"
+
+
+def calculate_overtime(row) -> Tuple[str, str, str, str]:
+    try:
+        work_time_str = row.get("勤務時間", "0:00") or "0:00"
+        work_hours = time_to_hours(work_time_str)
+
+        standard_hours = 8.0
+
+        total_overtime = max(0, work_hours - standard_hours)
+        if total_overtime <= 0:
+            return "", "", "", ""
+
+        start_time_str = row.get("出勤日時", "")
+        end_time_str = row.get("退勤日時", "")
+
+        return "", "", "", ""
+
+    except:
+        return "", "", "", ""

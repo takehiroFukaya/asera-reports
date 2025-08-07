@@ -186,12 +186,7 @@ else:
     ## change
     numeric_cols = ["勤務時間"]
 
-    total_time = (
-        df[numeric_cols]
-          .applymap(time_to_hours)         # '07:30' → 7.5
-          .sum()
-          .sum()
-    )
+    total_time = df[numeric_cols].applymap(time_to_hours).sum().sum()  # '07:30' → 7.5
     total_days = len(df)
 
     # 2. summary card ------------------------------------------
