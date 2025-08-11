@@ -124,7 +124,11 @@ st.markdown(
         margin-top: 4px;
     }
     
-    div.stButton > button {
+    [data-testid="stDownloadButton"] {
+        display: flex;
+        justify-content: center;
+    }
+    [data-testid="stDownloadButton"] > button {
         width: 100%;
         background-color: #4DB6AC;
         color: white;
@@ -135,10 +139,10 @@ st.markdown(
         font-weight: bold;
         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         margin-top: 1rem;
-        transition: background-color 0.3s ease; 
+        transition: background-color 0.3s ease;
     }
-    div.stButton > button:hover {
-        background-color: #26A69A; 
+    [data-testid="stDownloadButton"] > button:hover {
+        background-color: #26A69A;
         color: white;
         border: none;
     }
@@ -166,10 +170,14 @@ with col1:
 
 
 year, month = selected_month.replace("月", "").split("年")
-df = updater.get_shift_record(month)
+df = updater.get_shift_record(f"{year}年{int(month)}")
+status = getattr(updater, "last_status", {"ok": None})
 
 over_cols = ["所定外1", "所定外2", "所定外3"]
-over_time = df[over_cols].applymap(time_to_hours).sum().sum()
+if not df.empty and all(c in df.columns for c in over_cols):
+    over_time = df[over_cols].applymap(time_to_hours).sum().sum()
+else:
+    over_time = 0.0
 with col2:
     st.markdown(
         f"""
@@ -182,6 +190,15 @@ with col2:
         unsafe_allow_html=True,
     )
 
+if status.get("ok") is False:
+    stage = status.get("stage")
+    msg = status.get("detail", "")
+    if stage in ("month_folder", "spreadsheet"):
+        st.error(msg)
+    elif stage == "empty":
+        st.info(msg)
+    else:
+        st.warning(msg)
 
 if df.empty:
     st.info("出勤簿の内容はなにもありません")
@@ -223,5 +240,15 @@ else:
             """,
             unsafe_allow_html=True,
         )
-if st.button("出力"):
+csv_bytes = df.to_csv(index=False).encode("utf-8-sig")  # Excel-friendly
+
+downloaded = st.download_button(
+    label="出力",  # same UI label
+    data=csv_bytes,
+    file_name=f"{updater.connection.user}_{year}年{int(month)}月_日報.csv",
+    mime="text/csv",
+)
+
+# If the user clicked the download button, then navigate
+if downloaded:
     st.switch_page("pages/billing_list.py")
