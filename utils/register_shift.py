@@ -36,10 +36,10 @@ class RegisterShift:
 
         rest_time = rest_end_date_time - rest_start_date_time
         work_time = end_date_time - start_date_time - rest_time
-
+        month = f"{work_date.year}年{work_date.month}"
         """作業内容のレコードを追加する。引数に受け取るデータを追加して受け取れるようにする。"""
         return updater.add_record(
-            str(datetime.datetime.now().month),
+            month,
             "日報",
             [
                 str(start_date_time),

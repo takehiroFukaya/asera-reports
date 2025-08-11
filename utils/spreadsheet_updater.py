@@ -17,6 +17,7 @@ class SpreadsheetUpdater:
         self.parent_folder = self.connection.find_folder_by_name(
             f"日報_{self.connection.user}"
         )
+        self.last_status = {"ok": None, "stage": "", "detail": ""}
         if not self.parent_folder:
             logger.error(f"日報_{self.connection.user}のファイルが見つかりません")
 
@@ -33,7 +34,7 @@ class SpreadsheetUpdater:
         amount: int,
     ) -> bool:
 
-        month = str(start_datetime.month)
+        month = f"{start_datetime.year}年{start_datetime.month}"
         sheet_name = "作業内容"
         data = [
             str(start_datetime),
@@ -71,60 +72,61 @@ class SpreadsheetUpdater:
 
     def get_shift_record(self, month: str) -> pd.DataFrame:
         try:
+            # month folder
             folder_id = self.connection.find_folder_by_name(month, self.parent_folder)
             if not folder_id:
-                logger.error(f"{month}月のフォルダが見つかりません")
-                return pd.DataFrame()  # <-- change
+                msg = f"{month}月のフォルダが見つかりません"
+                logger.error(msg)
+                self.last_status = {"ok": False, "stage": "month_folder", "detail": msg}
+                return pd.DataFrame()
 
-            spreadsheet_id = self.connection.find_spreadsheet(
-                folder_id, f"{self.connection.user}_{month}月_日報"
-            )
+            # spreadsheet
+            expected_name = f"{self.connection.user}_{month}月_日報"
+            spreadsheet_id = self.connection.find_spreadsheet(folder_id, expected_name)
             if not spreadsheet_id:
-                logger.error(
-                    f"{self.connection.user}_{month}月_日報のファイルが見つかりません"
-                )
-                return pd.DataFrame()  # <-- change
+                msg = f"{expected_name}のファイルが見つかりません"
+                logger.error(msg)
+                self.last_status = {"ok": False, "stage": "spreadsheet", "detail": msg}
+                return pd.DataFrame()
 
+            # data
             sheet = self.gc.open_by_key(spreadsheet_id)
             worksheet = sheet.sheet1
             all_values = worksheet.get_all_values()
 
             if not all_values or len(all_values) < 2:
-                return pd.DataFrame()  # <-- empty sheet guard
+                msg = "シートは見つかりましたが、データ行がありません（ヘッダーのみ/空）"
+                logger.info(msg)
+                self.last_status = {"ok": False, "stage": "empty", "detail": msg}
+                return pd.DataFrame()
 
             day_report_data = all_values[1:]
 
             data = []
             headers = [
-                "出勤日時",
-                "退勤日時",
-                "勤務時間",
-                "休憩時間",
-                "所定外1",
-                "所定外2",
-                "所定外3",
-                "摘要",
+                "出勤日時","退勤日時","勤務時間","休憩時間",
+                "所定外1","所定外2","所定外3","摘要",
             ]
-            print("動作5")
 
             for row in day_report_data:
                 work_time, overtime_1, overtime_2, overtime_3 = calculate_overtime(row)
-                shift_recor_row = {
+                data.append({
                     "出勤日時": row[0],
                     "退勤日時": row[1],
                     "勤務時間": work_time,
                     "休憩時間": row[4],
-                    "所定外1": overtime_1,  # 所定外時間の計算
+                    "所定外1": overtime_1,
                     "所定外2": overtime_2,
                     "所定外3": overtime_3,
                     "摘要": row[6],
-                }
-                data.append(shift_recor_row)
+                })
 
-            return pd.DataFrame(data, columns=headers)
+            df = pd.DataFrame(data, columns=headers)
+            self.last_status = {"ok": True, "stage": "ok", "detail": "Loaded"}
+            return df
 
         except Exception as e:
-            logger.error(
-                f"{self.connection.user}_{month}月_日報でのデータ取得に失敗しました: {e}"
-            )
-            return pd.DataFrame()  # <-- change
+            msg = f"{self.connection.user}_{month}月_日報でのデータ取得に失敗しました: {e}"
+            logger.exception(msg)
+            self.last_status = {"ok": False, "stage": "exception", "detail": msg}
+            return pd.DataFrame()
