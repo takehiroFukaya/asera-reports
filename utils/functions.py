@@ -52,63 +52,116 @@ def hours_to_time(hours: float) -> str:
         return "0:00"
 
 
+WORK_START, WORK_END = 9, 18
+NIGHT_START, NIGHT_END = 22, 5  # 22:00–05:00
+
+def _overlap_hours(a_start: datetime.datetime, a_end: datetime.datetime,
+                   b_start: datetime.datetime, b_end: datetime.datetime) -> float:
+    start = max(a_start, b_start)
+    end = min(a_end, b_end)
+    if end <= start:
+        return 0.0
+    return (end - start).total_seconds() / 3600.0
+
+def _mk(d: datetime.date, h: int, m: int = 0) -> datetime.datetime:
+    return datetime.datetime(d.year, d.month, d.day, h, m, 0)
+
 def calculate_overtime(row) -> Tuple[str, str, str, str]:
+    """
+    row:
+      0 出勤日時, 1 退勤日時, 2 休憩開始時間, 3 休憩終了時間,
+      4 休憩時間(H:MM), 5 勤務時間(H:MM), 6 備考
+    returns: (勤務時間, 所定外1, 所定外2, 所定外3) as "H:MM"
+    """
     try:
-        overtime_1 = 0.0
-        overtime_2 = 0.0
-        overtime_3 = 0.0
-        work_time_str = row[5] or "0:00"
-        work_hours = time_to_hours(work_time_str)
+        start = datetime.datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
+        end   = datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S")
+        if end <= start:
+            return "", "", "", ""
 
-        standard_hours = 8.0
+        # Build worked intervals and subtract explicit break if valid
+        intervals = [(start, end)]
+        try:
+            if len(row) > 3 and row[2] and row[3]:
+                bs = datetime.datetime.strptime(row[2], "%Y-%m-%d %H:%M:%S")
+                be = datetime.datetime.strptime(row[3], "%Y-%m-%d %H:%M:%S")
+                if be > bs:
+                    bs = max(bs, start); be = min(be, end)
+                    if be > bs:
+                        left = (start, bs) if bs > start else None
+                        right = (be, end) if be < end else None
+                        intervals = [x for x in (left, right) if x and x[1] > x[0]]
+        except Exception:
+            pass
 
-        start_time_str = row[0]
-        end_time_str = row[1]
+        # If no explicit break, shave 休憩時間 from the end if provided
+        if (len(row) > 4 and row[4] and ":" in str(row[4])
+            and not (len(row) > 3 and row[2] and row[3])):
+            try:
+                h, m, *_ = map(int, str(row[4]).split(":"))
+                shave = (h + m/60)
+                if shave > 0 and intervals:
+                    total = sum((b - a).total_seconds() for a, b in intervals)/3600.0
+                    shave = min(shave, total)
+                    a, b = intervals[-1]
+                    new_end = b - datetime.timedelta(hours=shave)
+                    if new_end > a:
+                        intervals[-1] = (a, new_end)
+                    else:
+                        intervals.pop()
+            except Exception:
+                pass
 
-        start_time = datetime.datetime.strptime(start_time_str, "%Y-%m-%d %H:%M:%S")
-        end_time = datetime.datetime.strptime(end_time_str, "%Y-%m-%d %H:%M:%S")
+        # Totals
+        total_work = sum((b - a).total_seconds() for a, b in intervals) / 3600.0
 
-        print(start_time)
-        print(end_time)
-        if start_time.date() == end_time.date():
+        # Weekend: 所定外2 = all hours
+        if start.weekday() in (5, 6):
+            return (
+                hours_to_time(max(0.0, total_work)),
+                "",                                   # 所定外1
+                hours_to_time(max(0.0, total_work)),  # 所定外2
+                ""                                    # 所定外3 (keep empty to match current rule)
+            )
 
-            if start_time.weekday() == 5 or start_time.weekday() == 6:
-                overtime_2 = work_hours
-                return "", "", hours_to_time(overtime_2), ""
+        # Weekday windows per date
+        def day_windows(day: datetime.date):
+            d0 = _mk(day, 0, 0)
+            end_of_day = _mk(day, 0) + datetime.timedelta(days=1)
+            return {
+                "early": (_mk(day, 5), _mk(day, WORK_START)),  # 05:00–09:00
+                "late": (_mk(day, WORK_END), _mk(day, NIGHT_START)),  # 18:00–22:00
+                "n1": (_mk(day, NIGHT_START), end_of_day),  # 22:00–24:00
+                "n2": (_mk(day, 0), _mk(day, NIGHT_END)),  # 00:00–05:00
+                "dayseg": (d0, end_of_day),  # whole day
+            }
 
-            start_hour = start_time.hour + start_time.minute / 60
-            end_hour = end_time.hour + end_time.minute / 60
+        ns1 = 0.0  # 所定外1
+        ns3 = 0.0  # 所定外3
 
-            nighttime_hours = 0.0
+        for a, b in intervals:
+            cur = a.date()
+            while cur <= b.date():
+                wd = day_windows(cur)
+                seg_s = max(a, wd["dayseg"][0])
+                seg_e = min(b, wd["dayseg"][1])
 
-            # 22:00-24:00の範囲
-            if start_hour < 24 and end_hour > 22:
-                night_start = max(start_hour, 22)
-                night_end = min(end_hour, 24)
-                if night_end > night_start:
-                    nighttime_hours += night_end - night_start
-                    print(f"nighttime_hours:{nighttime_hours}")
+                ns3 += _overlap_hours(seg_s, seg_e, *wd["n1"])
+                ns3 += _overlap_hours(seg_s, seg_e, *wd["n2"])
+                ns1 += _overlap_hours(seg_s, seg_e, *wd["early"])
+                ns1 += _overlap_hours(seg_s, seg_e, *wd["late"])
 
-            # 0:00-5:00の範囲
-            if start_hour < 5 and end_hour > 0:
-                night_start = max(start_hour, 0)
-                night_end = min(end_hour, 5)
-                if night_end > night_start:
-                    nighttime_hours += night_end - night_start
-                    print(f"nighttime_hours:{nighttime_hours}")
+                cur += datetime.timedelta(days=1)
 
-            overtime_3 = nighttime_hours
-
-        total_overtime = max(0, work_hours - standard_hours)
-        if total_overtime != 0:
-            overtime_1 = total_overtime - overtime_3
+        # Clamp non-negative
+        ns1 = max(0.0, ns1)
+        ns3 = max(0.0, ns3)
 
         return (
-            hours_to_time(work_hours),
-            hours_to_time(overtime_1),
-            hours_to_time(overtime_2),
-            hours_to_time(overtime_3),
+            hours_to_time(max(0.0, total_work)),  # 勤務時間
+            hours_to_time(ns1),                   # 所定外1
+            "",                                   # 所定外2 (weekday)
+            hours_to_time(ns3),                   # 所定外3
         )
-
-    except:
+    except Exception:
         return "", "", "", ""

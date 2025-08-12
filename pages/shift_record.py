@@ -175,7 +175,7 @@ status = getattr(updater, "last_status", {"ok": None})
 
 over_cols = ["所定外1", "所定外2", "所定外3"]
 if not df.empty and all(c in df.columns for c in over_cols):
-    over_time = df[over_cols].applymap(time_to_hours).sum().sum()
+    over_time = df[over_cols].map(time_to_hours).sum().sum()
 else:
     over_time = 0.0
 with col2:
@@ -207,7 +207,7 @@ else:
     ## change
     numeric_cols = ["勤務時間"]
 
-    total_time = df[numeric_cols].applymap(time_to_hours).sum().sum()  # '07:30' → 7.5
+    total_time = df[numeric_cols].map(time_to_hours).sum().sum()  # '07:30' → 7.5
     total_days = len(df)
 
     # 2. summary card ------------------------------------------
