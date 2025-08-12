@@ -1,6 +1,5 @@
 import datetime
 import logging
-
 import pandas as pd
 
 from .connection import Connection
@@ -102,6 +101,7 @@ class SpreadsheetUpdater:
 
             day_report_data = all_values[1:]
 
+
             data = []
             headers = [
                 "出勤日時","退勤日時","勤務時間","休憩時間",
@@ -130,3 +130,34 @@ class SpreadsheetUpdater:
             logger.exception(msg)
             self.last_status = {"ok": False, "stage": "exception", "detail": msg}
             return pd.DataFrame()
+          
+    def get_work_logs(self, month: str, sheet_name: str = "作業内容") -> pd.DataFrame:
+            try:
+                folder_id = self.connection.find_folder_by_name(month, self.parent_folder)
+                if not folder_id:
+                    logger.error(f"{month}月のフォルダが見つかりません")
+                    return pd.DataFrame()
+
+                spreadsheet_id = self.connection.find_spreadsheet(folder_id, sheet_name)
+                if not spreadsheet_id:
+                    logger.error(f"{sheet_name}のスプレッドシートが見つかりません")
+                    return pd.DataFrame()
+
+                sheet = self.gc.open_by_key(spreadsheet_id)
+                worksheet = sheet.sheet1
+                all_values = worksheet.get_all_values()
+
+                if not all_values or len(all_values) < 2:
+                    return pd.DataFrame()
+
+                headers = all_values[0]
+                data = all_values[1:]
+
+                df = pd.DataFrame(data, columns=headers)
+                df["金額"] = pd.to_numeric(df["金額"], errors="coerce").fillna(0).astype(int)
+                return df
+
+            except Exception as e:
+                logger.error(f"{sheet_name}のデータ取得に失敗しました: {e}")
+                return pd.DataFrame()
+

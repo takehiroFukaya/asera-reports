@@ -11,19 +11,17 @@ class SpreadsheetCreator:
         self.gc = connection.gc
         self.service = connection.service
 
-    def create_work_report_spreadsheet(
-        self, folder_id: str, month_name: str
-    ) -> str | None:
+    def create_work_report_spreadsheet(self, folder_id: str, month_name: str) -> str | None:
         """作業内容"""
         headers = [
             "作業開始日時",
             "作業終了日時",
-            "作業場所",
-            "作業種別",
+            "作業カテゴリー",
             "作業内容",
-            "作業時間",
             "請求先",
-            "登録者",
+            "納品物",
+            "数量",
+            "金額"
         ]
 
         return self.create_spreadsheet(
