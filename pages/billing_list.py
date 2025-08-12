@@ -1,5 +1,7 @@
 import streamlit as st
+import pandas as pd
 from utils.functions import *
+from utils.spreadsheet_updater import SpreadsheetUpdater
 
 st.set_page_config(
     page_title="Work Log",
@@ -146,18 +148,20 @@ def load_css():
 
 
 load_css()
+# #
+# # data = {
+# #     "日付": ["2025-06-01", "2025-06-04", "2025-06-06", ],
+# #     "勤務時間": ["9:00~18:00", "9:00~12:00", "9:00~12:00"],
+# #     "業務内容": ["コード修正", "コード修正", "コード修正"],
+# #     "請求先": ["株式会社A", "株式会社B", "株式会社A"],
+# #     "納品物": ["仕様書", "テスト結果", "仕様書"],
+# #     "金額": [50000, 20000, 20000],
+# # }
+# # df = pd.DataFrame(data)
+# # total_hours = 12
+# total_amount = df["金額"].sum()
 
-data = {
-    "日付": ["2025-06-01", "2025-06-04", "2025-06-06", ],
-    "勤務時間": ["9:00~18:00", "9:00~12:00", "9:00~12:00"],
-    "業務内容": ["コード修正", "コード修正", "コード修正"],
-    "請求先": ["株式会社A", "株式会社B", "株式会社A"],
-    "納品物": ["仕様書", "テスト結果", "仕様書"],
-    "金額": [50000, 20000, 20000],
-}
-df = pd.DataFrame(data)
-total_hours = 12
-total_amount = df["金額"].sum()
+
 
 month_options, default_month_index = generate_month_options()
 col1, col2 = st.columns([0.4, 0.6])
@@ -179,14 +183,50 @@ with col2:
         label_visibility="collapsed"
     )
 
-st.write("")  # Spacer
+st.write("")
+updater = SpreadsheetUpdater()
+month = selected_month.replace("月", "")
+df = updater.get_work_logs(month)
+
+if df.empty:
+    st.info("まだ作業が登録されていません。まず Work Input で1件登録してください。")
+    st.stop()
+
+if all(isinstance(c, int) for c in df.columns):
+    header = df.iloc[0].astype(str).str.strip()   # row-0 → header
+    df     = df.iloc[1:].reset_index(drop=True)
+    df.columns = header
+
+df.columns = df.columns.str.strip()
+
+if "金額" not in df.columns:
+    st.error("『金額』列が見つかりません。シートのヘッダーを確認してください。")
+    st.stop()
+
+df["金額"] = pd.to_numeric(df["金額"], errors="coerce").fillna(0)
+
+df["作業開始日時"] = pd.to_datetime(df["作業開始日時"], errors="coerce")
+df["作業終了日時"] = pd.to_datetime(df["作業終了日時"], errors="coerce")
+df["勤務時間(h)"] = (df["作業終了日時"] - df["作業開始日時"]).dt.total_seconds() / 3600
+
+# ➌ total
+total_time = df["勤務時間(h)"].sum()
+hours   = int(total_time)
+minutes = int(round((total_time - hours) * 60))
+total_hhmm = f"{hours} 時間 {minutes:02d} 分"
+total_amount = df["金額"].sum()
 
 st.dataframe(df, use_container_width=True, hide_index=True)
+
+year, month = selected_month.replace("月", "").split("年")
+slug = f"{year}-{int(month):02d}"
+user_name = updater.connection.user
+
 
 st.markdown(f"""
 <div class="total-card">
     <span>合計</span>
-    <span>{total_hours} 時間</span>
+    <span>{total_hhmm}</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -195,6 +235,6 @@ excel_data = to_excel(df)
 st.download_button(
     label="出力",
     data=excel_data,
-    file_name="work_log.xlsx",
+    file_name = f"{slug}_{user_name}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )

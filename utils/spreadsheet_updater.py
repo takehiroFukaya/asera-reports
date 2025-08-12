@@ -1,8 +1,8 @@
 import datetime
 import logging
+import pandas as pd
 
-from .connection import Connection
-
+from .connection import  Connection
 logger = logging.getLogger(__name__)
 
 class SpreadsheetUpdater:
@@ -16,7 +16,7 @@ class SpreadsheetUpdater:
     # issue 18
     def add_work_report(self, start_datetime: datetime.datetime, end_datetime: datetime.datetime, work_category: str, work_content: str, work_client: str, deliverable_item: str, deliverable_quantity: int, amount: int) -> bool:
 
-        month = str(start_datetime.month)
+        month = f"{start_datetime.year}年{start_datetime.month}"
         sheet_name = "作業内容"
         data = [
             str(start_datetime),
@@ -52,6 +52,37 @@ class SpreadsheetUpdater:
         except Exception as error:
             logger.error(f"{sheet_name}でのデータの追加に失敗しました:{error}")
             return False
+
+    def get_work_logs(self, month: str, sheet_name: str = "作業内容") -> pd.DataFrame:
+            try:
+                folder_id = self.connection.find_folder_by_name(month, self.parent_folder)
+                if not folder_id:
+                    logger.error(f"{month}月のフォルダが見つかりません")
+                    return pd.DataFrame()
+
+                spreadsheet_id = self.connection.find_spreadsheet(folder_id, sheet_name)
+                if not spreadsheet_id:
+                    logger.error(f"{sheet_name}のスプレッドシートが見つかりません")
+                    return pd.DataFrame()
+
+                sheet = self.gc.open_by_key(spreadsheet_id)
+                worksheet = sheet.sheet1
+                all_values = worksheet.get_all_values()
+
+                if not all_values or len(all_values) < 2:
+                    return pd.DataFrame()
+
+                headers = all_values[0]
+                data = all_values[1:]
+
+                df = pd.DataFrame(data, columns=headers)
+                df["金額"] = pd.to_numeric(df["金額"], errors="coerce").fillna(0).astype(int)
+                return df
+
+            except Exception as e:
+                logger.error(f"{sheet_name}のデータ取得に失敗しました: {e}")
+                return pd.DataFrame()
+
 
 
 

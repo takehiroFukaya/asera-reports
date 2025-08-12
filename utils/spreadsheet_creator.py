@@ -16,12 +16,12 @@ class SpreadsheetCreator:
         headers = [
             "作業開始日時",
             "作業終了日時",
-            "作業場所",
-            "作業種別",
+            "作業カテゴリー",
             "作業内容",
-            "作業時間",
             "請求先",
-            "登録者"
+            "納品物",
+            "数量",
+            "金額"
         ]
 
         return self.create_spreadsheet(
