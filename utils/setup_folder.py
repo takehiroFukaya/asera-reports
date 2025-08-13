@@ -1,10 +1,12 @@
+# flake8: noqa
 import datetime
 import logging
 import time
 
-from .connection import Connection
-from .spreadsheet_creator import SpreadsheetCreator
 from streamlit import connection
+
+from utils.connection import Connection
+from utils.spreadsheet_creator import SpreadsheetCreator
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +28,9 @@ class SetupFolder:
             if not parent_folder:
                 parent_folder = self.connection.create_folder(f"日報_{user_name}")
 
-
-            folder_id = self.connection.find_folder_by_name(current_month, parent_folder)
+            folder_id = self.connection.find_folder_by_name(
+                current_month, parent_folder
+            )
             if not folder_id:
                 folder_id = self.connection.create_folder(current_month, parent_folder)
                 time.sleep(2)
