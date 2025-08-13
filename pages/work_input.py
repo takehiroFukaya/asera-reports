@@ -8,7 +8,8 @@ st.set_page_config(
     layout="centered",
 )
 
-st.markdown("""
+st.markdown(
+    """
 <style>
 
 [data-testid="stAppViewContainer"] {
@@ -93,19 +94,23 @@ st.markdown("""
     font-size: 40px; 
 }
 </style> 
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 col1, col2 = st.columns([3, 1])
 with col1:
-    work_date = st.date_input("Date", datetime.date.today(), label_visibility="collapsed")
+    work_date = st.date_input(
+        "Date", datetime.date.today(), label_visibility="collapsed"
+    )
 
 st.markdown("<h3>作業実績入力</h3>", unsafe_allow_html=True)
 
-if 'updater' not in st.session_state:
-    st.session_state['updater'] = SpreadsheetUpdater()
+if "updater" not in st.session_state:
+    st.session_state["updater"] = SpreadsheetUpdater()
 
-updater = st.session_state['updater']
+updater = st.session_state["updater"]
 
 with st.form(key="work_form"):
     t_col1, t_col2, t_col3 = st.columns([2, 0.5, 2])
@@ -114,12 +119,14 @@ with st.form(key="work_form"):
     with t_col2:
         st.markdown("<p class='time-separator'>~</p>", unsafe_allow_html=True)
     with t_col3:
-        end_time = st.time_input( "終了時間", label_visibility="collapsed")
+        end_time = st.time_input("終了時間", label_visibility="collapsed")
     work_category = st.selectbox(
-        "**作業カテゴリー**", options=[],
+        "**作業カテゴリー**",
+        options=[],
     )
     work_client = st.selectbox(
-        "**請求先**", options=[],
+        "**請求先**",
+        options=[],
     )
     work_content = st.text_area("**作業内容**")
     st.write("**納品物**")
@@ -127,7 +134,9 @@ with st.form(key="work_form"):
     with d_col1:
         deliverable_item = st.text_input("納品物名", label_visibility="collapsed")
     with d_col2:
-        deliverable_quantity = st.number_input("数量", value=1, min_value=1, step=1, label_visibility="collapsed")
+        deliverable_quantity = st.number_input(
+            "数量", value=1, min_value=1, step=1, label_visibility="collapsed"
+        )
     amount = st.number_input("**金額**", min_value=0, step=1000)
     submit_button = st.form_submit_button(label="登録")
 
@@ -141,7 +150,8 @@ if submit_button:
     minutes = (total_seconds % 3600) // 60
     time_spent_display = f"{hours:02d}:{minutes:02d}"
 
-    if not all([work_date, start_time, end_time, work_category, work_client, work_content, deliverable_item]):
+
+    if not all([work_date, start_time, end_time, work_content, deliverable_item]):
         st.error("全ての必須項目（日付、時間、カテゴリー、請求先、作業内容、納品物名）を入力してください。")
     elif start_time >= end_time:
         st.error("終了時間は開始時間より遅い時間を選択してください。")
@@ -154,7 +164,7 @@ if submit_button:
             work_client=work_client,
             deliverable_item=deliverable_item,
             deliverable_quantity=deliverable_quantity,
-            amount=amount
+            amount=amount,
         )
 
         if success:
@@ -162,7 +172,9 @@ if submit_button:
             st.write("---")
             st.write("### 登録内容")
             st.write(f"**日付:** {work_date}")
-            st.write(f"**作業時間:** {start_time.strftime('%H:%M')} ~ {end_time.strftime('%H:%M')} (合計: {time_spent_display})")
+            st.write(
+                f"**作業時間:** {start_time.strftime('%H:%M')} ~ {end_time.strftime('%H:%M')} (合計: {time_spent_display})"
+            )
             st.write(f"**カテゴリー:** {work_category if work_category else '未選択'}")
             st.write(f"**請求先:** {work_client if work_client else '未選択'}")
             st.write(f"**作業内容:**")
@@ -170,4 +182,6 @@ if submit_button:
             st.write(f"**納品物:** {deliverable_item} (数量: {deliverable_quantity})")
             st.write(f"**金額:** ¥{amount:,}")
         else:
-            st.error("❌ 作業記録の登録に失敗しました。詳細はアプリケーションのログを確認してください。")
+            st.error(
+                "❌ 作業記録の登録に失敗しました。詳細はアプリケーションのログを確認してください。"
+            )

@@ -16,23 +16,25 @@ class SpreadsheetCreator:
         headers = [
             "作業開始日時",
             "作業終了日時",
-            "作業場所",
-            "作業種別",
+            "作業カテゴリー",
             "作業内容",
-            "作業時間",
             "請求先",
-            "登録者"
+            "納品物",
+            "数量",
+            "金額"
         ]
 
         return self.create_spreadsheet(
             folder_id=folder_id,
-            name=f'{self.connection.user}_{month_name}月_作業内容',
-            description=f'{month_name}月の作業内容用スプレッドシート',
+            name=f"{self.connection.user}_{month_name}月_作業内容",
+            description=f"{month_name}月の作業内容用スプレッドシート",
             headers=headers,
-            sheet_type="作業内容ファイル"
+            sheet_type="作業内容ファイル",
         )
 
-    def create_daily_report_spreadsheet(self, folder_id: str, month_name: str) -> str | None:
+    def create_daily_report_spreadsheet(
+        self, folder_id: str, month_name: str
+    ) -> str | None:
         """日報用スプレッドシートを作成する"""
         headers = [
             "出勤日時",
@@ -41,39 +43,43 @@ class SpreadsheetCreator:
             "休憩終了時間",
             "休憩時間",
             "勤務時間",
-            "備考欄"
+            "備考欄",
         ]
 
         return self.create_spreadsheet(
             folder_id=folder_id,
-            name=f'{self.connection.user}_{month_name}月_日報',
-            description=f'{month_name}月の日報用スプレッドシート',
+            name=f"{self.connection.user}_{month_name}月_日報",
+            description=f"{month_name}月の日報用スプレッドシート",
             headers=headers,
-            sheet_type="日報ファイル"
+            sheet_type="日報ファイル",
         )
 
-    def create_workrecord_spreadsheet(self, folder_id: str, month_name: str) -> str | None:
+    def create_workrecord_spreadsheet(
+        self, folder_id: str, month_name: str
+    ) -> str | None:
         """出勤簿用スプレッドシートを作成する"""
         headers = [
             "出勤日時",
             "退勤日時",
-            "休憩開始時間",
-            "休憩終了時間",
-            "休憩時間",
             "勤務時間",
-            "備考欄"
+            "休憩時間",
+            "所定外1",
+            "所定外2",
+            "所定外3",
+            "摘要",
         ]
 
         return self.create_spreadsheet(
             folder_id=folder_id,
-            name=f'{self.connection.user}_{month_name}月_出勤簿',
-            description=f'{month_name}月の出勤簿用スプレッドシート',
+            name=f"{self.connection.user}_{month_name}月_出勤簿",
+            description=f"{month_name}月の出勤簿用スプレッドシート",
             headers=headers,
-            sheet_type="出勤簿ファイル"
+            sheet_type="出勤簿ファイル",
         )
 
-
-    def create_deliverable_spreadsheet(self, folder_id: str, month_name: str) -> str | None:
+    def create_deliverable_spreadsheet(
+        self, folder_id: str, month_name: str
+    ) -> str | None:
         """納品物スプレッドシートを作成する"""
         headers = [
             "納品日時",
@@ -84,27 +90,35 @@ class SpreadsheetCreator:
 
         return self.create_spreadsheet(
             folder_id=folder_id,
-            name=f'{self.connection.user}_{month_name}月_納品物',
-            description=f'{month_name}月の日報用スプレッドシート',
+            name=f"{self.connection.user}_{month_name}月_納品物",
+            description=f"{month_name}月の日報用スプレッドシート",
             headers=headers,
-            sheet_type="納品物ファイル"
+            sheet_type="納品物ファイル",
         )
 
-    def create_spreadsheet(self, folder_id: str, name: str, description: str,
-                            headers: list[str], sheet_type: str) -> str | None:
+    def create_spreadsheet(
+        self,
+        folder_id: str,
+        name: str,
+        description: str,
+        headers: list[str],
+        sheet_type: str,
+    ) -> str | None:
         """スプレッドシートを作成する関数"""
         try:
             """スプレッドシートのメタデータ"""
             spreadsheet_metadata = {
-                'name': name,
-                'parents': [folder_id],
-                'mimeType': 'application/vnd.google-apps.spreadsheet',
-                'description': description
+                "name": name,
+                "parents": [folder_id],
+                "mimeType": "application/vnd.google-apps.spreadsheet",
+                "description": description,
             }
 
             """スプレッドシートを作成"""
-            spreadsheet = self.service.files().create(body=spreadsheet_metadata).execute()
-            spreadsheet_id = spreadsheet['id']
+            spreadsheet = (
+                self.service.files().create(body=spreadsheet_metadata).execute()
+            )
+            spreadsheet_id = spreadsheet["id"]
 
             """権限設定"""
             # self.connection.set_permission(spreadsheet_id, sheet_type)
@@ -133,16 +147,13 @@ class SpreadsheetCreator:
             worksheet.update(values=[headers], range_name=header_range)
 
             """ヘッダーのフォーマットを設定"""
-            worksheet.format(header_range, {
-                "backgroundColor": {
-                    "red": 0.8,
-                    "green": 0.8,
-                    "blue": 0.8
+            worksheet.format(
+                header_range,
+                {
+                    "backgroundColor": {"red": 0.8, "green": 0.8, "blue": 0.8},
+                    "textFormat": {"bold": True},
                 },
-                "textFormat": {
-                    "bold": True
-                }
-            })
+            )
 
         except Exception as error:
             logger.error(f"ヘッダー設定エラー: {error}")
