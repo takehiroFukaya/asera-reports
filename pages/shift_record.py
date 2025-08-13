@@ -1,7 +1,8 @@
+# flake8: noqa
 import pandas as pd
 import streamlit as st
 
-from utils.functions import generate_month_options, time_to_hours
+from utils.functions import generate_month_options, time_to_hours, to_excel
 from utils.spreadsheet_updater import SpreadsheetUpdater
 
 st.set_page_config(layout="centered")
@@ -240,13 +241,14 @@ else:
             """,
             unsafe_allow_html=True,
         )
-csv_bytes = df.to_csv(index=False).encode("utf-8-sig")  # Excel-friendly
+# csv_bytes = df.to_csv(index=False).encode("utf-8-sig")  # Excel-friendly
+excel_data = to_excel(df)
 
 downloaded = st.download_button(
     label="出力",  # same UI label
-    data=csv_bytes,
-    file_name=f"{updater.connection.user}_{year}年{int(month)}月_日報.csv",
-    mime="text/csv",
+    data=excel_data,
+    file_name=f"{updater.connection.user}_{year}年{int(month)}月_日報.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )
 
 # If the user clicked the download button, then navigate
