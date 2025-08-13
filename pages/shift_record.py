@@ -1,10 +1,14 @@
+# flake8: noqa
+import pandas as pd
 import streamlit as st
-from utils.functions import generate_month_options
 
+from utils.functions import generate_month_options, time_to_hours, to_excel
+from utils.spreadsheet_updater import SpreadsheetUpdater
 
 st.set_page_config(layout="centered")
 
-st.markdown("""
+st.markdown(
+    """
 <style>
     .stApp {
         background-color: #f0faf7;
@@ -121,7 +125,11 @@ st.markdown("""
         margin-top: 4px;
     }
     
-    div.stButton > button {
+    [data-testid="stDownloadButton"] {
+        display: flex;
+        justify-content: center;
+    }
+    [data-testid="stDownloadButton"] > button {
         width: 100%;
         background-color: #4DB6AC;
         color: white;
@@ -132,68 +140,117 @@ st.markdown("""
         font-weight: bold;
         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         margin-top: 1rem;
-        transition: background-color 0.3s ease; 
+        transition: background-color 0.3s ease;
     }
-    div.stButton > button:hover {
-        background-color: #26A69A; 
+    [data-testid="stDownloadButton"] > button:hover {
+        background-color: #26A69A;
         color: white;
         border: none;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
+
 
 # --- App Layout ---
+
+updater = SpreadsheetUpdater()
 
 # Row 1: Controls
 col1, col2 = st.columns([1.5, 1])
 month_options, default_index = generate_month_options()
 
 with col1:
-    st.selectbox(
+    selected_month = st.selectbox(
         "Month",
         options=month_options,
         index=default_index,
-        label_visibility="collapsed"
+        label_visibility="collapsed",
     )
 
+
+year, month = selected_month.replace("月", "").split("年")
+df = updater.get_shift_record(f"{year}年{int(month)}")
+status = getattr(updater, "last_status", {"ok": None})
+
+over_cols = ["所定外1", "所定外2", "所定外3"]
+if not df.empty and all(c in df.columns for c in over_cols):
+    over_time = df[over_cols].map(time_to_hours).sum().sum()
+else:
+    over_time = 0.0
 with col2:
-    st.markdown("""
+    st.markdown(
+        f"""
         <div class="hour-box">
             <span>所定外時間</span>
             <span class="divider"></span>
-            <span>12 h</span>
+            <span>{over_time} h</span>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
-# Row 2: Summary Statistics Box
-st.markdown("""
-    <div class="summary-box">
-        <div class="summary-item">
-            <span>合計就労日</span>
-            <span class="value">12日</span>
+if status.get("ok") is False:
+    stage = status.get("stage")
+    msg = status.get("detail", "")
+    if stage in ("month_folder", "spreadsheet"):
+        st.error(msg)
+    elif stage == "empty":
+        st.info(msg)
+    else:
+        st.warning(msg)
+
+if df.empty:
+    st.info("出勤簿の内容はなにもありません")
+
+else:
+    ## change
+    numeric_cols = ["勤務時間"]
+
+    total_time = df[numeric_cols].map(time_to_hours).sum().sum()  # '07:30' → 7.5
+    total_days = len(df)
+
+    # 2. summary card ------------------------------------------
+    st.markdown(
+        f"""
+        <div class="summary-box">
+            <div class="summary-item">
+                <span>合計就労日</span>
+                <span class="value">{total_days}日</span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-item">
+                <span>合計時間</span>
+                <span class="value">{total_time:.1f} h</span>
+            </div>
         </div>
-        <div class="summary-divider"></div>
-        <div class="summary-item">
-            <span>合計時間</span>
-            <span class="value">36 h</span>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
+    ## change
+    for _, row in df[["出勤日時", "退勤日時"]].iterrows():
+        start_date, start_time = row["出勤日時"].split(" ")
+        _, end_time = row["退勤日時"].split(" ")
+        st.markdown(
+            f"""
+            <div class="date-card">
+                <div class="date">{start_date}</div>
+                <div class="time">{start_time}~{end_time}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+# csv_bytes = df.to_csv(index=False).encode("utf-8-sig")  # Excel-friendly
+excel_data = to_excel(df)
 
-# List of Work Day Entries
-work_days = [
-    {"date": "5月1日 (水)", "time": "9:00~18:00"},
-    {"date": "5月4日 (水)", "time": "9:00~18:00"},
-    {"date": "5月6日 (水)", "time": "9:00~18:00"},
-]
+downloaded = st.download_button(
+    label="出力",  # same UI label
+    data=excel_data,
+    file_name=f"{updater.connection.user}_{year}年{int(month)}月_日報.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+)
 
-for day in work_days:
-    st.markdown(f"""
-        <div class="date-card">
-            <div class="date">{day['date']}</div>
-            <div class="time">{day['time']}</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-if st.button("出力"):
+# If the user clicked the download button, then navigate
+if downloaded:
     st.switch_page("pages/billing_list.py")
