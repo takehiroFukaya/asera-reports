@@ -48,23 +48,30 @@ def hours_to_time(hours: float) -> str:
         h = int(hours)
         m = int((hours - h) * 60)
         return f"{h}:{m:02d}"
-    except:
+    except ValueError:
         return "0:00"
 
 
 WORK_START, WORK_END = 9, 18
 NIGHT_START, NIGHT_END = 22, 5  # 22:00–05:00
 
-def _overlap_hours(a_start: datetime.datetime, a_end: datetime.datetime,
-                   b_start: datetime.datetime, b_end: datetime.datetime) -> float:
+
+def _overlap_hours(
+    a_start: datetime.datetime,
+    a_end: datetime.datetime,
+    b_start: datetime.datetime,
+    b_end: datetime.datetime,
+) -> float:
     start = max(a_start, b_start)
     end = min(a_end, b_end)
     if end <= start:
         return 0.0
     return (end - start).total_seconds() / 3600.0
 
+
 def _mk(d: datetime.date, h: int, m: int = 0) -> datetime.datetime:
     return datetime.datetime(d.year, d.month, d.day, h, m, 0)
+
 
 def calculate_overtime(row) -> Tuple[str, str, str, str]:
     """
@@ -75,7 +82,7 @@ def calculate_overtime(row) -> Tuple[str, str, str, str]:
     """
     try:
         start = datetime.datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
-        end   = datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S")
+        end = datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S")
         if end <= start:
             return "", "", "", ""
 
@@ -83,25 +90,37 @@ def calculate_overtime(row) -> Tuple[str, str, str, str]:
         intervals = [(start, end)]
         try:
             if len(row) > 3 and row[2] and row[3]:
-                bs = datetime.datetime.strptime(row[2], "%Y-%m-%d %H:%M:%S")
-                be = datetime.datetime.strptime(row[3], "%Y-%m-%d %H:%M:%S")
+                # bs = datetime.datetime.strptime(row[2], "%Y-%m-%d %H:%M:%S")
+                # be = datetime.datetime.strptime(row[3], "%Y-%m-%d %H:%M:%S")
+                bs = datetime.datetime.strptime(row[2], "%H:%M:%S")
+                be = datetime.datetime.strptime(row[3], "%H:%M:%S")
+                bs = datetime.datetime.combine(start.date(), bs.time())
+                be = datetime.datetime.combine(start.date(), be.time())
+                print(bs)
+                print(be)
                 if be > bs:
-                    bs = max(bs, start); be = min(be, end)
+                    bs = max(bs, start)
+                    be = min(be, end)
                     if be > bs:
                         left = (start, bs) if bs > start else None
                         right = (be, end) if be < end else None
                         intervals = [x for x in (left, right) if x and x[1] > x[0]]
-        except Exception:
-            pass
+
+        except Exception as e:
+            print(f"エラーが発生しました: {e}")
 
         # If no explicit break, shave 休憩時間 from the end if provided
-        if (len(row) > 4 and row[4] and ":" in str(row[4])
-            and not (len(row) > 3 and row[2] and row[3])):
+        if (
+            len(row) > 4
+            and row[4]
+            and ":" in str(row[4])
+            and not (len(row) > 3 and row[2] and row[3])
+        ):
             try:
                 h, m, *_ = map(int, str(row[4]).split(":"))
-                shave = (h + m/60)
+                shave = h + m / 60
                 if shave > 0 and intervals:
-                    total = sum((b - a).total_seconds() for a, b in intervals)/3600.0
+                    total = sum((b - a).total_seconds() for a, b in intervals) / 3600.0
                     shave = min(shave, total)
                     a, b = intervals[-1]
                     new_end = b - datetime.timedelta(hours=shave)
@@ -109,8 +128,8 @@ def calculate_overtime(row) -> Tuple[str, str, str, str]:
                         intervals[-1] = (a, new_end)
                     else:
                         intervals.pop()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"エラーが発生しました: {e}")
 
         # Totals
         total_work = sum((b - a).total_seconds() for a, b in intervals) / 3600.0
@@ -119,9 +138,9 @@ def calculate_overtime(row) -> Tuple[str, str, str, str]:
         if start.weekday() in (5, 6):
             return (
                 hours_to_time(max(0.0, total_work)),
-                "",                                   # 所定外1
+                "",  # 所定外1
                 hours_to_time(max(0.0, total_work)),  # 所定外2
-                ""                                    # 所定外3 (keep empty to match current rule)
+                "",  # 所定外3 (keep empty to match current rule)
             )
 
         # Weekday windows per date
@@ -159,9 +178,9 @@ def calculate_overtime(row) -> Tuple[str, str, str, str]:
 
         return (
             hours_to_time(max(0.0, total_work)),  # 勤務時間
-            hours_to_time(ns1),                   # 所定外1
-            "",                                   # 所定外2 (weekday)
-            hours_to_time(ns3),                   # 所定外3
+            hours_to_time(ns1),  # 所定外1
+            "",  # 所定外2 (weekday)
+            hours_to_time(ns3),  # 所定外3
         )
     except Exception:
         return "", "", "", ""
