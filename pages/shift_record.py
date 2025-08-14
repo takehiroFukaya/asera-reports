@@ -5,7 +5,7 @@ import streamlit as st
 from utils.functions import generate_month_options, time_to_hours, to_excel
 from utils.spreadsheet_updater import SpreadsheetUpdater
 
-st.set_page_config(layout="centered")
+st.set_page_config(page_title="出勤簿出力", layout="centered")
 
 st.markdown(
     """
@@ -114,15 +114,27 @@ st.markdown(
         box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
     .date-card .date {
-        font-size: 16px;
-        color: #85b4af;
+        font-size: 20px;
+        color: #194352;
         font-weight: 600;   
     }
     .date-card .time {
-        font-size: 14px;
-        color: #85b4af;
+        font-size: 16px;
+        color: #194352;
         font-weight: 600; 
         margin-top: 4px;
+    }
+    
+    .date-card .over_time {
+        display: flex;
+        font-size: 14px;
+        color: #85b4af;
+        font-weight: 600;
+        margin-top: 4px
+    }
+    
+    .date-card .over_time_item {
+        padding-right: 10px
     }
     
     [data-testid="stDownloadButton"] {
@@ -187,7 +199,7 @@ with col2:
             <span class="divider"></span>
             <span>{over_time} h</span>
         </div>
-    """,
+        """,
         unsafe_allow_html=True,
     )
 
@@ -229,14 +241,25 @@ else:
         unsafe_allow_html=True,
     )
     ## change
-    for _, row in df[["出勤日時", "退勤日時"]].iterrows():
+    for _, row in df[
+        ["出勤日時", "退勤日時", "所定外1", "所定外2", "所定外3", "摘要"]
+    ].iterrows():
         start_date, start_time = row["出勤日時"].split(" ")
         _, end_time = row["退勤日時"].split(" ")
+        overtime_1 = row["所定外1"]
+        overtime_2 = row["所定外2"]
+        overtime_3 = row["所定外3"]
         st.markdown(
             f"""
             <div class="date-card">
                 <div class="date">{start_date}</div>
                 <div class="time">{start_time}~{end_time}</div>
+                 <div class="over_time">
+                    <div class="over_time_item">所定外1: {overtime_1 if overtime_1 != "" else "0:00"}</div>
+                    <div class="over_time_item">所定外2: {overtime_2 if overtime_2 != "" else "0:00"}</div>
+                    <div class="over_time_item">所定外3: {overtime_3 if overtime_3 != "" else "0:00"}</div>
+                    <div class="over_time_item">摘要: {row["摘要"]}</div>
+                </div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -251,6 +274,6 @@ downloaded = st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )
 
-# If the user clicked the download button, then navigate
-if downloaded:
-    st.switch_page("pages/billing_list.py")
+# # If the user clicked the download button, then navigate
+# if downloaded:
+#     st.switch_page("pages/billing_list.py")

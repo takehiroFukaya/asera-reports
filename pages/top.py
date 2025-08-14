@@ -126,3 +126,5 @@ with col2:
         st.switch_page("pages/shift_input.py")
     if st.button("出勤簿作成"):
         st.switch_page("pages/shift_record.py")
+    if st.button("請求一覧作成"):
+        st.switch_page("pages/billing_list.py")
