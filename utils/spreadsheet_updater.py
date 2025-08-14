@@ -1,6 +1,7 @@
 import datetime
 import logging
 import pandas as pd
+from typing import List
 
 from .connection import Connection
 from .functions import calculate_overtime
@@ -28,9 +29,9 @@ class SpreadsheetUpdater:
         work_category: str,
         work_content: str,
         work_client: str,
-        deliverable_item: str,
-        deliverable_quantity: int,
-        amount: int,
+        deliverable_item: List[str],
+        deliverable_quantity: List[int],
+        amount: List[int],
     ) -> bool:
 
         month = f"{start_datetime.year}年{start_datetime.month}"

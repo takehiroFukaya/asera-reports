@@ -8,6 +8,8 @@ st.set_page_config(
     layout="centered",
 )
 
+
+
 st.markdown(
     """
 <style>
@@ -111,6 +113,15 @@ if "updater" not in st.session_state:
     st.session_state["updater"] = SpreadsheetUpdater()
 
 updater = st.session_state["updater"]
+
+if "deliverables" not in st.session_state:
+    st.session_state["deliverables"] = []
+
+if "count" not in st.session_state:
+    st.session_state["count"] = 0
+
+
+
 
 with st.form(key="work_form"):
     t_col1, t_col2, t_col3 = st.columns([2, 0.5, 2])
