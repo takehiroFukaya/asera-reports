@@ -242,7 +242,7 @@ else:
     )
     ## change
     for _, row in df[
-        ["出勤日時", "退勤日時", "所定外1", "所定外2", "所定外3"]
+        ["出勤日時", "退勤日時", "所定外1", "所定外2", "所定外3", "摘要"]
     ].iterrows():
         start_date, start_time = row["出勤日時"].split(" ")
         _, end_time = row["退勤日時"].split(" ")
@@ -258,6 +258,7 @@ else:
                     <div class="over_time_item">所定外1: {overtime_1 if overtime_1 != "" else "0:00"}</div>
                     <div class="over_time_item">所定外2: {overtime_2 if overtime_2 != "" else "0:00"}</div>
                     <div class="over_time_item">所定外3: {overtime_3 if overtime_3 != "" else "0:00"}</div>
+                    <div class="over_time_item">摘要: {row["摘要"]}</div>
                 </div>
             </div>
             """,
