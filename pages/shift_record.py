@@ -199,7 +199,7 @@ with col2:
             <span class="divider"></span>
             <span>{over_time} h</span>
         </div>
-    """,
+        """,
         unsafe_allow_html=True,
     )
 
@@ -274,6 +274,6 @@ downloaded = st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )
 
-# If the user clicked the download button, then navigate
-if downloaded:
-    st.switch_page("pages/billing_list.py")
+# # If the user clicked the download button, then navigate
+# if downloaded:
+#     st.switch_page("pages/billing_list.py")
