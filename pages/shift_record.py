@@ -5,7 +5,7 @@ import streamlit as st
 from utils.functions import generate_month_options, time_to_hours, to_excel
 from utils.spreadsheet_updater import SpreadsheetUpdater
 
-st.set_page_config(layout="centered")
+st.set_page_config(page_title="出勤簿出力", layout="centered")
 
 st.markdown(
     """
