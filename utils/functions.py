@@ -184,3 +184,11 @@ def calculate_overtime(row) -> Tuple[str, str, str, str]:
         )
     except Exception:
         return "", "", "", ""
+
+
+def timedelta_to_hhmm(td: datetime.timedelta) -> str:
+    total_time_seconds = int(td.total_seconds())
+    hours = total_time_seconds // 3600
+    minutes = (total_time_seconds % 3600) // 60
+
+    return f"{hours:02}:{minutes:02}"

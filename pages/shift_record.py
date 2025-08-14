@@ -1,8 +1,15 @@
 # flake8: noqa
+from datetime import datetime, timedelta
+
 import pandas as pd
 import streamlit as st
 
-from utils.functions import generate_month_options, time_to_hours, to_excel
+from utils.functions import (
+    generate_month_options,
+    time_to_hours,
+    timedelta_to_hhmm,
+    to_excel,
+)
 from utils.spreadsheet_updater import SpreadsheetUpdater
 
 st.set_page_config(page_title="出勤簿出力", layout="centered")
@@ -241,14 +248,54 @@ else:
         unsafe_allow_html=True,
     )
     ## change
+
+    total_worktime = timedelta(0)
+    total_breaktime = timedelta(0)
+    total_overtime_1 = timedelta(0)
+    total_overtime_2 = timedelta(0)
+    total_overtime_3 = timedelta(0)
+
     for _, row in df[
-        ["出勤日時", "退勤日時", "所定外1", "所定外2", "所定外3", "摘要"]
+        [
+            "出勤日時",
+            "退勤日時",
+            "勤務時間",
+            "休憩時間",
+            "所定外1",
+            "所定外2",
+            "所定外3",
+            "摘要",
+        ]
     ].iterrows():
         start_date, start_time = row["出勤日時"].split(" ")
         _, end_time = row["退勤日時"].split(" ")
         overtime_1 = row["所定外1"]
         overtime_2 = row["所定外2"]
         overtime_3 = row["所定外3"]
+
+        # Calculate each total time
+        work_dt = datetime.strptime(row["勤務時間"], "%H:%M")
+        total_worktime += timedelta(hours=work_dt.hour, minutes=work_dt.minute)
+
+        break_dt = datetime.strptime(row["休憩時間"], "%H:%M:%S")
+        total_breaktime += timedelta(hours=break_dt.hour, minutes=break_dt.minute)
+
+        if overtime_1 != "":
+            overtime_1_dt = datetime.strptime(overtime_1, "%H:%M")
+            total_overtime_1 += timedelta(
+                hours=overtime_1_dt.hour, minutes=overtime_1_dt.minute
+            )
+        if overtime_2 != "":
+            overtime_2_dt = datetime.strptime(overtime_2, "%H:%M")
+            total_overtime_2 += timedelta(
+                hours=overtime_2_dt.hour, minutes=overtime_2_dt.minute
+            )
+        if overtime_3 != "":
+            overtime_3_dt = datetime.strptime(overtime_3, "%H:%M")
+            total_overtime_3 += timedelta(
+                hours=overtime_3_dt.hour, minutes=overtime_3_dt.minute
+            )
+
         st.markdown(
             f"""
             <div class="date-card">
@@ -264,6 +311,18 @@ else:
             """,
             unsafe_allow_html=True,
         )
+
+    df.loc[len(df)] = [
+        "",
+        "",
+        timedelta_to_hhmm(total_worktime),
+        timedelta_to_hhmm(total_breaktime),
+        timedelta_to_hhmm(total_overtime_1),
+        timedelta_to_hhmm(total_overtime_2),
+        timedelta_to_hhmm(total_overtime_3),
+        "",
+    ]
+
 # csv_bytes = df.to_csv(index=False).encode("utf-8-sig")  # Excel-friendly
 excel_data = to_excel(df)
 
