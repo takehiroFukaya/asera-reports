@@ -19,9 +19,6 @@ class SpreadsheetCreator:
             "作業カテゴリー",
             "作業内容",
             "請求先",
-            "納品物",
-            "数量",
-            "金額"
         ]
 
         return self.create_spreadsheet(
@@ -84,6 +81,7 @@ class SpreadsheetCreator:
         headers = [
             "納品日時",
             "納品物名",
+            '納品個数',
             "単価",
             "金額",
         ]

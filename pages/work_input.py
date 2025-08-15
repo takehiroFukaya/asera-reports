@@ -8,14 +8,18 @@ st.set_page_config(
     layout="centered",
 )
 
+
 def add_deliverable():
     new_id = max(item["id"] for item in st.session_state["deliverables"]) + 1
-    st.session_state["deliverables"].append({"id":new_id,"deliverable_item": "", "deliverable_quantity": 0, "amount": 0})
+    st.session_state["deliverables"].append(
+        {"id": new_id, "deliverable_item": "", "deliverable_quantity": 0, "amount": 0}
+    )
+
 
 def delete_deliverable(target):
-    st.session_state["deliverables"] = [item for item in st.session_state["deliverables"] if item["id"] != target]
-
-
+    st.session_state["deliverables"] = [
+        item for item in st.session_state["deliverables"] if item["id"] != target
+    ]
 
 
 st.markdown(
@@ -125,8 +129,9 @@ if "updater" not in st.session_state:
 updater = st.session_state["updater"]
 
 if "deliverables" not in st.session_state:
-    st.session_state["deliverables"] = [{"id":0, "deliverable_item":"","deliverable_quantity": 0, "amount": 0}]
-
+    st.session_state["deliverables"] = [
+        {"id": 0, "deliverable_item": "", "deliverable_quantity": 0, "amount": 0}
+    ]
 
 
 delete_button = {}
@@ -141,11 +146,11 @@ with st.form(key="work_form"):
         end_time = st.time_input("終了時間", label_visibility="collapsed")
     work_category = st.selectbox(
         "**作業カテゴリー**",
-        options=[],
+        options=["社内業務","セットアップ","備品設置","保守","システム開発","その他"],
     )
     work_client = st.selectbox(
         "**請求先**",
-        options=[],
+        options=["東信","明誠","ナマコン","石産"],
     )
     work_content = st.text_area("**作業内容**")
     for item in st.session_state["deliverables"]:
@@ -153,19 +158,32 @@ with st.form(key="work_form"):
         st.write("**納品物**")
         d_col1, d_col2 = st.columns([3, 1])
         with d_col1:
-            deliverable_item = st.text_input("納品物名", label_visibility="collapsed", key=f"deliverable_item_{item_id}")
+            deliverable_item = st.text_input(
+                "納品物名",
+                label_visibility="collapsed",
+                key=f"deliverable_item_{item_id}",
+            )
         with d_col2:
             deliverable_quantity = st.number_input(
-                "数量", value=1, min_value=1, step=1, label_visibility="collapsed", key=f"deliverable_quantity_{item_id}"
+                "数量",
+                value=1,
+                min_value=1,
+                step=1,
+                label_visibility="collapsed",
+                key=f"deliverable_quantity_{item_id}",
             )
-        amount = st.number_input("**金額**", min_value=0, step=1000, key=f"amount_{item_id}")
+        unit_price = st.number_input(
+            "**単価**", min_value=0, step=1000, key=f"unit_price_{item_id}"
+        )
 
-        deliverable_data.append({
-            "date": work_date,
-            "deliverable_item": deliverable_item,
-            "deliverable_quantity": deliverable_quantity,
-            "amount": amount
-        })
+        deliverable_data.append(
+            {
+                "date": datetime.datetime.combine(work_date, start_time),
+                "deliverable_item": deliverable_item,
+                "deliverable_quantity": deliverable_quantity,
+                "unit_price": unit_price
+            }
+        )
 
     if len(st.session_state["deliverables"]) > 1:
         delete_button = st.form_submit_button(f"削除")
@@ -173,7 +191,6 @@ with st.form(key="work_form"):
     add_button = st.form_submit_button("追加")
 
     submit_button = st.form_submit_button(label="登録")
-
 
 
 if add_button:
@@ -192,20 +209,30 @@ elif submit_button:
     minutes = (total_seconds % 3600) // 60
     time_spent_display = f"{hours:02d}:{minutes:02d}"
 
-
-    if not all([work_date, start_time, end_time, work_content, deliverable_item]):
-        st.error("全ての必須項目（日付、時間、カテゴリー、請求先、作業内容、納品物名）を入力してください。")
+    if not all([work_date, start_time, end_time, work_content]):
+        st.error(
+            "全ての必須項目（日付、時間、カテゴリー、請求先、作業内容）を入力してください。"
+        )
     elif start_time >= end_time:
         st.error("終了時間は開始時間より遅い時間を選択してください。")
     else:
-        success = updater.add_work_report(
-            start_datetime=start_datetime,
-            end_datetime=end_datetime,
-            work_category=work_category,
-            work_content=work_content,
-            work_client=work_client,
-            deliverables=deliverable_data
-        )
+        if not deliverable_item:
+            success = updater.add_work_report(
+                start_datetime=start_datetime,
+                end_datetime=end_datetime,
+                work_category=work_category,
+                work_content=work_content,
+                work_client=work_client,
+            )
+        else:
+            success = updater.add_work_report(
+                start_datetime=start_datetime,
+                end_datetime=end_datetime,
+                work_category=work_category,
+                work_content=work_content,
+                work_client=work_client,
+                deliverables=deliverable_data,
+            )
 
         if success:
             st.success("✅ 作業記録を正常に登録しました！")
@@ -220,8 +247,10 @@ elif submit_button:
             st.write(f"**作業内容:**")
             st.info(work_content)
             for item in deliverable_data:
-                st.write(f"**納品物:** {item["deliverable_item"]} (数量: {item["deliverable_quantity"]})")
-                st.write(f"**金額:** ¥{item["amount"]}")
+                st.write(
+                    f"**納品物:** {item["deliverable_item"]} (数量: {item["deliverable_quantity"]})"
+                )
+                st.write(f"**単価:** ¥{item["unit_price"]}")
         else:
             st.error(
                 "❌ 作業記録の登録に失敗しました。詳細はアプリケーションのログを確認してください。"

@@ -1,7 +1,8 @@
 import datetime
 import logging
+from typing import Dict, List
+
 import pandas as pd
-from typing import List, Dict
 
 from .connection import Connection
 from .functions import calculate_overtime
@@ -29,7 +30,7 @@ class SpreadsheetUpdater:
         work_category: str,
         work_content: str,
         work_client: str,
-        deliverables: List[Dict]
+        deliverables: List[Dict] | None = None,
     ) -> bool:
 
         month = f"{start_datetime.year}年{start_datetime.month}"
@@ -42,15 +43,19 @@ class SpreadsheetUpdater:
             work_client,
         ]
 
-        for item in deliverables:
-            item_data = [
-                item["date"],
-                item["deliverable_item"],
-                item["deliverable_quantity"],
-                item["amount"]
-            ]
-            if not self.add_record(month, "納品物", item_data):
-                return False
+
+        if deliverables:
+            for item in deliverables:
+                amount = int(item["deliverable_quantity"]) * item["unit_price"]
+                item_data = [
+                    str(item["date"]),
+                    item["deliverable_item"],
+                    item["deliverable_quantity"],
+                    item["unit_price"],
+                    amount
+                ]
+                if not self.add_record(month, "納品物", item_data):
+                    return False
 
         return self.add_record(month, sheet_name, data)
 
@@ -159,20 +164,50 @@ class SpreadsheetUpdater:
                 logger.error(f"{sheet_name}のスプレッドシートが見つかりません")
                 return pd.DataFrame()
 
-            sheet = self.gc.open_by_key(spreadsheet_id)
-            worksheet = sheet.sheet1
-            all_values = worksheet.get_all_values()
-
-            if not all_values or len(all_values) < 2:
+            deliverable_spreadsheet_id = self.connection.find_spreadsheet(folder_id,"納品物")
+            if not spreadsheet_id:
+                logger.error(f"納品物のスプレッドシートが見つかりません")
                 return pd.DataFrame()
 
-            headers = all_values[0]
-            data = all_values[1:]
+            sheet = self.gc.open_by_key(spreadsheet_id)
+            worksheet = sheet.sheet1
+            work_values = worksheet.get_all_values()
 
-            df = pd.DataFrame(data, columns=headers)
-            df["金額"] = (
-                pd.to_numeric(df["金額"], errors="coerce").fillna(0).astype(int)
-            )
+            if not work_values or len(work_values) < 2:
+                return pd.DataFrame()
+
+            work_headers = work_values[0]
+            work_data = work_values[1:]
+            work_df = pd.DataFrame(work_data,columns=work_headers)
+
+            deliverable_sheet = self.gc.open_by_key(deliverable_spreadsheet_id)
+            deliverable_worksheet = deliverable_sheet.sheet1
+            deliverable_values = deliverable_worksheet.get_all_values()
+
+            if not deliverable_values or len(deliverable_values) < 2:
+                deliverable_df = pd.DataFrame()
+            else:
+                deliverable_headers = deliverable_values[0]
+                deliverable_data = deliverable_values[1:]
+                deliverable_df = pd.DataFrame(deliverable_data, columns=deliverable_headers)
+
+
+            if not deliverable_df.empty:
+                date_column_work = "作業開始日時"
+                date_column_deliverable = "納品日時"
+
+                work_df[date_column_work] = pd.to_datetime(work_df[date_column_work], errors='coerce')
+                deliverable_df[date_column_deliverable] = pd.to_datetime(deliverable_df[date_column_deliverable],errors='coerce')
+
+                df = pd.merge(work_df,deliverable_df,left_on=date_column_work,right_on=date_column_deliverable,how='left')
+            else:
+                df = work_df
+
+
+            # df = pd.DataFrame(data, columns=headers)
+            # df["金額"] = (
+            #     pd.to_numeric(df["金額"], errors="coerce").fillna(0).astype(int)
+            # )
             return df
 
         except Exception as e:

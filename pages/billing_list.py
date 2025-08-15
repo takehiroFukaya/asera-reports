@@ -216,7 +216,11 @@ minutes = int(round((total_time - hours) * 60))
 total_hhmm = f"{hours} 時間 {minutes:02d} 分"
 total_amount = df["金額"].sum()
 
-st.dataframe(df, use_container_width=True, hide_index=True)
+exclude_col = ["納品日時"]
+
+df_display = df.drop(columns=exclude_col, errors='ignore')
+
+st.dataframe(df_display, use_container_width=True, hide_index=True)
 
 year, month = selected_month.replace("月", "").split("年")
 slug = f"{year}-{int(month):02d}"
@@ -230,7 +234,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-excel_data = to_excel(df)
+excel_data = to_excel(df_display)
 
 st.download_button(
     label="出力",
