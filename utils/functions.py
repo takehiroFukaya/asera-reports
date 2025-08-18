@@ -192,3 +192,14 @@ def timedelta_to_hhmm(td: datetime.timedelta) -> str:
     minutes = (total_time_seconds % 3600) // 60
 
     return f"{hours:02}:{minutes:02}"
+
+def round_time_to_fifteen_min(dt):
+    minutes = dt.minute
+    rounded_minutes = round(minutes / 15) * 15
+    if rounded_minutes >= 60:
+        hour = dt.hour + 1 if dt.hour < 23 else 0
+        minute = 0
+    else:
+        hour = dt.hour
+        minute = rounded_minutes
+    return datetime.time(hour, minute)

@@ -1,5 +1,6 @@
 import streamlit as st
 import datetime
+from utils.functions import round_time_to_fifteen_min
 
 from utils.spreadsheet_updater import SpreadsheetUpdater
 
@@ -98,6 +99,9 @@ st.markdown(
     color: white;
 }
 
+
+
+
 .time-separator {
     display: flex;
     align-items: center;
@@ -136,14 +140,15 @@ if "deliverables" not in st.session_state:
 
 delete_button = {}
 deliverable_data = []
+now_time = round_time_to_fifteen_min(datetime.datetime.now())
 with st.form(key="work_form"):
     t_col1, t_col2, t_col3 = st.columns([2, 0.5, 2])
     with t_col1:
-        start_time = st.time_input("開始時間", label_visibility="collapsed")
+        start_time = st.time_input("開始時間", now_time, label_visibility="collapsed")
     with t_col2:
         st.markdown("<p class='time-separator'>~</p>", unsafe_allow_html=True)
     with t_col3:
-        end_time = st.time_input("終了時間", label_visibility="collapsed")
+        end_time = st.time_input("終了時間", now_time ,label_visibility="collapsed")
     work_category = st.selectbox(
         "**作業カテゴリー**",
         options=["社内業務","セットアップ","備品設置","保守","システム開発","その他"],
@@ -185,10 +190,16 @@ with st.form(key="work_form"):
             }
         )
 
-    if len(st.session_state["deliverables"]) > 1:
-        delete_button = st.form_submit_button(f"削除")
+    col_add, col_delete = st.columns([1, 1])
 
-    add_button = st.form_submit_button("追加")
+    with col_add:
+        add_button = st.form_submit_button("追加", type="secondary")
+
+    with col_delete:
+        if len(st.session_state["deliverables"]) > 1:
+            delete_button = st.form_submit_button("削除", type="secondary")
+        else:
+            delete_button = False
 
     submit_button = st.form_submit_button(label="登録")
 
