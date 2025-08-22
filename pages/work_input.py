@@ -155,7 +155,7 @@ with st.form(key="work_form"):
     )
     work_client = st.selectbox(
         "**請求先**",
-        options=["東信","明誠","ナマコン","石産"],
+        options=["東信","明誠","生コン","石産","アセラ社内"],
     )
     work_content = st.text_area("**作業内容**")
     for item in st.session_state["deliverables"]:
