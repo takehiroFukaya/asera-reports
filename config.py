@@ -23,5 +23,5 @@ class Config:
         "https://www.googleapis.com/auth/drive",
         "https://www.googleapis.com/auth/userinfo.profile",
     ]
-    share_email = ["aseratkyn@gmail.com"]
+    
     redirect_uri = st.secrets["redirect_uris"]

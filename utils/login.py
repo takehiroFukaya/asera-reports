@@ -126,7 +126,7 @@ class Login:
 
             try:
                 # 新しいフローを作成してトークンを取得
-                flow = Flow.from_client_secrets_file(
+                flow = Flow.from_client_config(
                     Config.account_file,
                     self.scopes,
                     redirect_uri= Config.redirect_uri
