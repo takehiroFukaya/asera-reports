@@ -12,16 +12,16 @@ class Login:
     def __init__(self):
         self.scopes = Config.scopes
 
-        # セッション初期化
+        # --- セッション初期化 ---
         if "credentials" not in st.session_state:
             st.session_state.credentials = None
         if "oauth_state" not in st.session_state:
             st.session_state.oauth_state = None
-        if "oauth_states" not in st.session_state:   # ▼ 直近のstateを複数保持して古いリンク対策
+        if "oauth_states" not in st.session_state:  # 直近のstateを複数保持（古いリンク踏み対策）
             st.session_state.oauth_states = []
         if "flow" not in st.session_state:
             st.session_state.flow = None
-        if "login_in_progress" not in st.session_state:  # ▼ 多重押下ガード
+        if "login_in_progress" not in st.session_state:  # 多重押下ガード
             st.session_state.login_in_progress = False
 
     def get_credentials(self):
@@ -69,9 +69,10 @@ class Login:
                     st.success(f"✅ ログイン中: {user_name}")
                 with col2:
                     if st.button("ログアウト"):
+                        # クリーンアップ
                         st.session_state.credentials = None
                         st.session_state.oauth_state = None  # ★ログアウト時にstateも破棄
-                        st.session_state.oauth_states = []    # ▼ 複数state履歴も破棄
+                        st.session_state.oauth_states = []
                         st.session_state.flow = None          # ★ログアウト時にflowも破棄
                         st.session_state.login_in_progress = False
                         st.rerun()
@@ -88,7 +89,7 @@ class Login:
 
             if st.button("🚀 Googleでログイン", disabled=st.session_state.login_in_progress):
                 try:
-                    st.session_state.login_in_progress = True  # ▼ 多重押下ガードON
+                    st.session_state.login_in_progress = True  # 多重押下ガードON
 
                     # フロー生成
                     flow = Flow.from_client_config(
@@ -108,7 +109,7 @@ class Login:
                     st.session_state.oauth_state = state
                     st.session_state.flow = flow
 
-                    # ▼ 直近stateを履歴に（古いリンク踏み対策：最大3件）
+                    # 直近state履歴に追加（最大3件）
                     states = st.session_state.oauth_states
                     states.append(state)
                     st.session_state.oauth_states = states[-3:]
@@ -125,48 +126,69 @@ class Login:
         """認証コールバックを処理"""
         query_params = st.query_params
 
-        if 'code' in query_params:
-            # ▼ list / str 混在対策: 最初の要素を使う
-            def _first(v):
-                if isinstance(v, list):
-                    return v[0]
-                return v
+        if 'code' not in query_params:
+            st.error("認証コードが見つかりません。最初からやり直してください。")
+            st.session_state.login_in_progress = False
+            return None
 
-            auth_code = _first(query_params.get('code'))
-            state = _first(query_params.get('state'))
+        # list / str 混在対策: 最初の要素を返す
+        def _first(v):
+            if isinstance(v, list):
+                return v[0]
+            return v
 
-            # ★state 比較
-            expected_state = st.session_state.get('oauth_state')
-            recent_states = st.session_state.get('oauth_states', [])
-            if not expected_state or (state != expected_state and state not in recent_states):
-                exp_len = len(expected_state) if expected_state else 0  # ▼ デバッグ補助（長さのみ）
-                got_len = len(state) if state else 0
-                st.error(f"認証エラー: 無効な状態パラメータ（expected:{exp_len} chars / got:{got_len} chars）")
-                st.session_state.login_in_progress = False
-                return None
+        auth_code = _first(query_params.get('code'))
+        state = _first(query_params.get('state'))
 
-            try:
-                # ★セッションの flow を使う
-                flow = st.session_state.get('flow')
-                if not flow:
-                    st.error("認証フローが見つかりません。再度ログインしてください。")
-                    st.session_state.login_in_progress = False
-                    return None
+        # ★state 比較
+        expected_state = st.session_state.get('oauth_state')
+        recent_states = st.session_state.get('oauth_states', [])
 
-                flow.fetch_token(code=auth_code)
-                st.session_state.credentials = json.loads(flow.credentials.to_json())
+        # セッションが保たれていれば expected_state と一致、または直近stateに含まれていればOK
+        state_ok = False
+        if expected_state and state == expected_state:
+            state_ok = True
+        elif expected_state and state in recent_states:
+            state_ok = True
+        elif not expected_state and state:
+            # セッションが再生成/消失して expected がない場合のフォールバック（警告を出しつつ継続）
+            st.warning("セッションが再生成されました。安全な範囲で処理を継続します。")
+            state_ok = True
 
-                # 一時情報を破棄
-                st.session_state.oauth_state = None
-                st.session_state.oauth_states = []
-                st.session_state.flow = None
-                st.session_state.login_in_progress = False
+        if not state_ok:
+            exp_len = len(expected_state) if expected_state else 0  # デバッグ補助（長さのみ表示）
+            got_len = len(state) if state else 0
+            st.error(f"認証エラー: 無効な状態パラメータ（expected:{exp_len} chars / got:{got_len} chars）")
+            st.session_state.login_in_progress = False
+            return None
 
-                # URL パラメータをクリアしてリロード
-                st.query_params.clear()
-                st.success("🎉 認証が完了しました！")
-                st.rerun()
+        try:
+            # ★セッションの flow を使う
+            flow = st.session_state.get('flow')
 
-            except Exception as e:
-                st.session_state.login_in_progress = False
-                st.error(f"認証に失敗しました: {e}")
+            if not flow:
+                # セッション消失時のフォールバック再生成（redirect_uri は必ず承認済みURIと完全一致させること）
+                flow = Flow.from_client_config(
+                    Config.account_file,
+                    self.scopes,
+                    redirect_uri=Config.redirect_uri
+                )
+
+            flow.fetch_token(code=auth_code)
+            st.session_state.credentials = json.loads(flow.credentials.to_json())
+
+            # 一時情報を破棄
+            st.session_state.oauth_state = None
+            st.session_state.oauth_states = []
+            st.session_state.flow = None
+            st.session_state.login_in_progress = False
+
+            # URL パラメータをクリアしてリロード
+            st.query_params.clear()
+            st.success("🎉 認証が完了しました！")
+            st.rerun()
+
+        except Exception as e:
+            st.session_state.login_in_progress = False
+            st.error(f"認証に失敗しました: {e}")
+            return None
