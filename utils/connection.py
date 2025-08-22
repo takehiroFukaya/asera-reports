@@ -1,6 +1,7 @@
 # mypy: ignore-errors
 # flake8: noqa
 import datetime
+import streamlit as st
 import logging
 import time
 
@@ -17,20 +18,40 @@ logger = logging.getLogger(__name__)
 
 class Connection:
     def __init__(self):
-        self.credentials = Credentials.from_authorized_user_file(
-            "./token.json", Config.scopes
-        )
-        # self.credentials = service_account.Credentials.from_service_account_file("../asera-dayreport-15c05cf58a1f.json", scopes=Config.scopes)
-        # self.folder_id = Config.folder_id
-        self.gc = gspread.authorize(self.credentials)
-        self.service = build("drive", "v3", credentials=self.credentials)
         try:
-            self.user = (
-                self.service.about().get(fields="user").execute()["user"]["displayName"]
+            if 'credentials' not in st.session_state or not st.session_state.credentials:
+                raise Exception("認証情報がありません。ログインしてください。")
+
+            self.credentials = Credentials.from_authorized_user_info(
+                st.session_state.credentials,
+                scopes= Config.scopes
             )
+
+            self.gc = gspread.authorize(self.credentials)
+            self.service = build("drive", "v3", credentials=self.credentials)
+
+            try:
+                user_info = self.service.about().get(fields="user").execute()
+                self.user = user_info["user"]["displayName"]
+            except Exception as e:
+                logger.warning(f"ユーザー名の取得に失敗: {e}")
+                self.user = "unknown"
+
         except Exception as e:
-            print(f"ユーザ名の取得に失敗しました{e}")
-            self.user = "unknown"
+            logger.error(f"接続の初期化に失敗: {e}")
+
+        # self.credentials = Credentials.from_authorized_user_file(
+        #     "./token.json", Config.scopes
+        # )
+        # self.gc = gspread.authorize(self.credentials)
+        # self.service = build("drive", "v3", credentials=self.credentials)
+        # try:
+        #     self.user = (
+        #         self.service.about().get(fields="user").execute()["user"]["displayName"]
+        #     )
+        # except Exception as e:
+        #     print(f"ユーザ名の取得に失敗しました{e}")
+        #     self.user = "unknown"
 
     def find_folder_by_name(self, name, folder_id=None):
         """現在の月のフォルダを探し存在した場合そのフォルダのidを返す"""

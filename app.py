@@ -7,15 +7,24 @@ from utils.setup_folder import SetupFolder
 
 
 async def initialize_spreadsheet():
-    Login()
-    setup = SetupFolder()
-    setup.setup()
+    login = Login()
+    credentials = login.authenticate()
+    if credentials:
+        setup = SetupFolder()
+        setup.setup()
+        return True
+    else:
+        print("認証が失敗しました")
+        return False
 
 
 st.title("日報アプリ")
 
 with st.spinner("読み込み中..."):
-    asyncio.run(initialize_spreadsheet())
+    auth_success = asyncio.run(initialize_spreadsheet())
 
 
-st.switch_page("pages/top.py")
+if auth_success:
+    st.switch_page("pages/top.py")
+else:
+    st.info("認証を完了してください。")
