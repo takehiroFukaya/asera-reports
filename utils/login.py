@@ -1,4 +1,4 @@
-# streamlit_auth.py
+# login.py
 import streamlit as st
 import json
 from google.auth.transport.requests import Request
@@ -32,20 +32,20 @@ class Login:
                 except Exception as e:
                     st.error(f"トークンの更新に失敗しました: {e}")
                     st.session_state.credentials = None
-
         return None
 
     def authenticate(self):
         """認証フローを実行"""
-        st.subheader("🔐アカウント認証")
+        st.subheader("🔐 アカウント認証")
         query_params = st.query_params
 
+        # コールバック処理
         if 'code' in query_params:
             return self.handle_callback()
 
         creds = self.get_credentials()
-
         if creds:
+            # 認証済み
             try:
                 service = build("drive", "v3", credentials=creds)
                 user_info = service.about().get(fields="user").execute()
@@ -66,23 +66,28 @@ class Login:
                 return None
 
         else:
+            # 未認証
             st.warning("Googleアカウントでの認証が必要です")
 
             if st.button("🚀 Googleでログイン"):
                 try:
+                    # フロー生成
                     flow = Flow.from_client_config(
                         Config.account_file,
                         self.scopes,
                         redirect_uri=Config.redirect_uri
                     )
 
+                    # 認証URL生成
                     auth_url, state = flow.authorization_url(
                         access_type='offline',
                         include_granted_scopes='true',
                         prompt='consent'
                     )
-                    st.session_state.flow = flow
+
+                    # ★state をセッションに先に保存
                     st.session_state.oauth_state = state
+                    st.session_state.flow = flow
 
                     st.markdown(f"### 🔗 [こちらをクリックして認証してください]({auth_url})")
                     st.info("認証後、このページに自動的に戻ります")
@@ -99,6 +104,7 @@ class Login:
             auth_code = query_params['code']
             state = query_params.get('state')
 
+            # ★state 比較
             if state != st.session_state.get('oauth_state'):
                 st.error("認証エラー: 無効な状態パラメータ")
                 return None
@@ -112,6 +118,8 @@ class Login:
 
                 flow.fetch_token(code=auth_code)
                 st.session_state.credentials = json.loads(flow.credentials.to_json())
+
+                # URL パラメータをクリアしてリロード
                 st.query_params.clear()
                 st.success("🎉 認証が完了しました！")
                 st.rerun()
