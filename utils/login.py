@@ -11,6 +11,14 @@ class Login:
     def __init__(self):
         self.scopes = Config.scopes
 
+        # セッション初期化
+        if "credentials" not in st.session_state:
+            st.session_state.credentials = None
+        if "oauth_state" not in st.session_state:
+            st.session_state.oauth_state = None
+        if "flow" not in st.session_state:
+            st.session_state.flow = None
+
     def get_credentials(self):
         """セッション状態から認証情報を取得または新規認証"""
         if 'credentials' not in st.session_state:
@@ -57,6 +65,8 @@ class Login:
                 with col2:
                     if st.button("ログアウト"):
                         st.session_state.credentials = None
+                        st.session_state.oauth_state = None  # ★ログアウト時にstateも破棄
+                        st.session_state.flow = None          # ★ログアウト時にflowも破棄
                         st.rerun()
                 return creds
 
@@ -85,7 +95,7 @@ class Login:
                         prompt='consent'
                     )
 
-                    # ★state をセッションに先に保存
+                    # ★state と flow をセッションに先に保存
                     st.session_state.oauth_state = state
                     st.session_state.flow = flow
 
@@ -110,14 +120,18 @@ class Login:
                 return None
 
             try:
-                flow = Flow.from_client_config(
-                    Config.account_file,
-                    self.scopes,
-                    redirect_uri=Config.redirect_uri
-                )
+                # ★セッションの flow を使う
+                flow = st.session_state.get('flow')
+                if not flow:
+                    st.error("認証フローが見つかりません。再度ログインしてください。")
+                    return None
 
                 flow.fetch_token(code=auth_code)
                 st.session_state.credentials = json.loads(flow.credentials.to_json())
+
+                # 一時情報を破棄
+                st.session_state.oauth_state = None
+                st.session_state.flow = None
 
                 # URL パラメータをクリアしてリロード
                 st.query_params.clear()
