@@ -1,27 +1,23 @@
-import os
 import streamlit as st
 
-from dotenv import load_dotenv
-from google.oauth2.service_account import Credentials
-
-load_dotenv()
-
-
 class Config:
-    # folder_id = os.environ.get('DEFALUT_FOLDER_ID')
+    # Streamlit Secrets から OAuth 情報を取得
+    google_oauth = st.secrets["google_oauth"]
+
     account_file = {
-                        "web": {
-                            "client_id": st.secrets["google_oauth"]["client_id"],
-                            "client_secret": st.secrets["google_oauth"]["client_secret"],
-                            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                            "token_uri": "https://oauth2.googleapis.com/token",
-                            "redirect_uris": st.secrets["google_oauth"]["redirect_uris"]
-                        }
-                    }
+        "web": {
+            "client_id": google_oauth["client_id"],
+            "client_secret": google_oauth["client_secret"],
+            "auth_uri": google_oauth["auth_uri"],
+            "token_uri": google_oauth["token_uri"],
+            "redirect_uris": google_oauth["redirect_uris"],
+        }
+    }
 
     scopes = [
         "https://www.googleapis.com/auth/drive",
         "https://www.googleapis.com/auth/userinfo.profile",
     ]
-    
-    redirect_uri = st.secrets["redirect_uris"]
+
+    # Flow 初期化時に使うリダイレクトURI
+    redirect_uri = google_oauth["redirect_uris"][0]  # 配列の最初の URI を使用
