@@ -86,9 +86,6 @@ class Login:
                         Config.account_file, self.scopes
                     )
 
-                    # flow = Flow.from_client_secrets_file(
-                    #     Config.account_file, self.scopes, redirect_uri="http://localhost:8501/"
-                    # )
 
                     # 認証URLを生成
                     auth_url, state = flow.authorization_url(
@@ -132,7 +129,7 @@ class Login:
                 flow = Flow.from_client_secrets_file(
                     Config.account_file,
                     self.scopes,
-                    redirect_uri="http://localhost:8501/"
+                    redirect_uri= Config.redirect_uri
                 )
 
                 # 認証コードでトークンを取得
