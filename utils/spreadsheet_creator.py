@@ -143,12 +143,25 @@ class SpreadsheetCreator:
             st.write(
                 f"認証情報の有効性: {self.connection.credentials.valid if hasattr(self.connection.credentials, 'valid') else 'unknown'}")
 
+            # gspreadクライアントの状態確認
+            st.write(f"gspreadクライアント存在: {bool(self.gc)}")
+            st.write(f"gspreadクライアントタイプ: {type(self.gc)}")
 
-            sheet = self.gc.open_by_key(spreadsheet_id)
-            st.write("スプレッドシートを開きました")
+            logger.info("スプレッドシートを開こうとしています...")
 
+            try:
+                sheet = self.gc.open_by_key(spreadsheet_id)
+                st.write("スプレッドシートを開きました")
+            except Exception as error:
+                logger.error(f"スプレッドシートオープンエラー: {type(error).__name__}: {str(error)}")
+                # より詳細なエラー情報
+                import traceback
+                logger.error(f"オープンエラー詳細: {traceback.format_exc()}")
+                raise
+
+            logger.info("ワークシート取得を試行中...")
             worksheet = sheet.sheet1
-            st.write("ワークシートを取得しました")
+            logger.info("ワークシートを取得しました")
 
             """ヘッダーの行を設定"""
             header_range = f'A1:{chr(ord("A") + len(headers) - 1)}1'
