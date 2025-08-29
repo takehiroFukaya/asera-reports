@@ -138,35 +138,13 @@ class SpreadsheetCreator:
     def setup_headers(self, spreadsheet_id: str, headers: list[str]):
         """ヘッダーを設定する"""
         try:
-            st.write(f"ヘッダー設定開始 - ID: {spreadsheet_id}")
-            st.write(f"設定予定のヘッダー: {headers}")
-            st.write(
-                f"認証情報の有効性: {self.connection.credentials.valid if hasattr(self.connection.credentials, 'valid') else 'unknown'}")
+            sheet = self.gc.open_by_key(spreadsheet_id)
 
-            # gspreadクライアントの状態確認
-            st.write(f"gspreadクライアント存在: {bool(self.gc)}")
-            st.write(f"gspreadクライアントタイプ: {type(self.gc)}")
-
-            logger.info("スプレッドシートを開こうとしています...")
-
-            try:
-                sheet = self.gc.open_by_key(spreadsheet_id)
-                st.write("スプレッドシートを開きました")
-            except Exception as error:
-                logger.error(f"スプレッドシートオープンエラー: {type(error).__name__}: {str(error)}")
-                # より詳細なエラー情報
-                import traceback
-                logger.error(f"オープンエラー詳細: {traceback.format_exc()}")
-                raise
-
-            logger.info("ワークシート取得を試行中...")
             worksheet = sheet.sheet1
-            logger.info("ワークシートを取得しました")
 
             """ヘッダーの行を設定"""
             header_range = f'A1:{chr(ord("A") + len(headers) - 1)}1'
             worksheet.update(values=[headers], range_name=header_range)
-            st.write("ヘッダーの更新完了")
 
             """ヘッダーのフォーマットを設定"""
             worksheet.format(
