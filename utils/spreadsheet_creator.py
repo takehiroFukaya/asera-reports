@@ -137,12 +137,22 @@ class SpreadsheetCreator:
     def setup_headers(self, spreadsheet_id: str, headers: list[str]):
         """ヘッダーを設定する"""
         try:
+            logger.info(f"ヘッダー設定開始 - ID: {spreadsheet_id}")
+            logger.info(f"設定予定のヘッダー: {headers}")
+            logger.info(
+                f"認証情報の有効性: {self.connection.credentials.valid if hasattr(self.connection.credentials, 'valid') else 'unknown'}")
+
+
             sheet = self.gc.open_by_key(spreadsheet_id)
+            logger.info("スプレッドシートを開きました")
+
             worksheet = sheet.sheet1
+            logger.info("ワークシートを取得しました")
 
             """ヘッダーの行を設定"""
             header_range = f'A1:{chr(ord("A") + len(headers) - 1)}1'
             worksheet.update(values=[headers], range_name=header_range)
+            logger.info("ヘッダーの更新完了")
 
             """ヘッダーのフォーマットを設定"""
             worksheet.format(
