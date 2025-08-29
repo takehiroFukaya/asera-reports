@@ -1,6 +1,7 @@
 import logging
 
 from googleapiclient.errors import HttpError
+import streamlit as st
 
 logger = logging.getLogger(__name__)
 
@@ -137,22 +138,22 @@ class SpreadsheetCreator:
     def setup_headers(self, spreadsheet_id: str, headers: list[str]):
         """ヘッダーを設定する"""
         try:
-            logger.info(f"ヘッダー設定開始 - ID: {spreadsheet_id}")
-            logger.info(f"設定予定のヘッダー: {headers}")
-            logger.info(
+            st.write(f"ヘッダー設定開始 - ID: {spreadsheet_id}")
+            st.write(f"設定予定のヘッダー: {headers}")
+            st.write(
                 f"認証情報の有効性: {self.connection.credentials.valid if hasattr(self.connection.credentials, 'valid') else 'unknown'}")
 
 
             sheet = self.gc.open_by_key(spreadsheet_id)
-            logger.info("スプレッドシートを開きました")
+            st.write("スプレッドシートを開きました")
 
             worksheet = sheet.sheet1
-            logger.info("ワークシートを取得しました")
+            st.write("ワークシートを取得しました")
 
             """ヘッダーの行を設定"""
             header_range = f'A1:{chr(ord("A") + len(headers) - 1)}1'
             worksheet.update(values=[headers], range_name=header_range)
-            logger.info("ヘッダーの更新完了")
+            st.write("ヘッダーの更新完了")
 
             """ヘッダーのフォーマットを設定"""
             worksheet.format(
