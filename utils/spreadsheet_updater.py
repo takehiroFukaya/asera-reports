@@ -60,9 +60,8 @@ class SpreadsheetUpdater:
         return self.add_record(month, sheet_name, data)
 
     def add_record(self, month: str, sheet_name: str, data: list):
-        this_year = datetime.datetime.now().year
         try:
-            folder_id = self.connection.find_folder_by_name(f"{this_year}年_{month}", self.parent_folder)
+            folder_id = self.connection.find_folder_by_name(month, self.parent_folder)
             if not folder_id:
                 logger.error(f"{month}月のフォルダが見つかりません")
                 return False
