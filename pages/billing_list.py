@@ -210,7 +210,8 @@ df["作業終了日時"] = pd.to_datetime(df["作業終了日時"], errors="coer
 df["勤務時間(h)"] = (df["作業終了日時"] - df["作業開始日時"]).dt.total_seconds() / 3600
 
 # ➌ total
-total_time = df["勤務時間(h)"].sum()
+# total_time = df["勤務時間(h)"].sum()
+total_time = df.drop_duplicates(subset=["作業開始日時"])["勤務時間(h)"].sum()
 hours   = int(total_time)
 minutes = int(round((total_time - hours) * 60))
 total_hhmm = f"{hours} 時間 {minutes:02d} 分"
