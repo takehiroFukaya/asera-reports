@@ -1,5 +1,6 @@
 import streamlit as st
 import datetime
+import pytz
 from utils.functions import round_time_to_fifteen_min
 
 from utils.spreadsheet_updater import SpreadsheetUpdater
@@ -140,7 +141,7 @@ if "deliverables" not in st.session_state:
 
 delete_button = {}
 deliverable_data = []
-now_time = round_time_to_fifteen_min(datetime.datetime.now())
+now_time = round_time_to_fifteen_min(datetime.datetime.now(pytz.timezone('Asia/Tokyo')))
 with st.form(key="work_form"):
     t_col1, t_col2, t_col3 = st.columns([2, 0.5, 2])
     with t_col1:

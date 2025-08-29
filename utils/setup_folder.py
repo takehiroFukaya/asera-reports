@@ -2,6 +2,7 @@
 import datetime
 import logging
 import time
+import pytz
 
 from streamlit import connection
 
@@ -18,7 +19,7 @@ class SetupFolder:
 
     def setup(self):
         """指定された月のセットアップを行う ― 成功したら True を返す"""
-        today = datetime.datetime.now()
+        today = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
         current_month = f"{today.year}年{today.month}"
 
         user_name = self.connection.user
